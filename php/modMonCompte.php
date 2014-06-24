@@ -7,7 +7,7 @@
 			require_once('./conx/connexion.php');
 			$id=$_SESSION['IDtrombi'];
 			$pwd=$_POST['pwd'];
-			$modif = $connexion->prepare('UPDATE users SET PWD=:pwd WHERE ID=:id;');
+			$modif = $connexion->prepare('UPDATE '.$prefixeDB.'users SET PWD=:pwd WHERE ID=:id;');
 			try {
 				$modif->execute(array('pwd'=>$pwd, 'id'=>$id));
 			} catch( Exception $e ){

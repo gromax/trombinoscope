@@ -1,28 +1,44 @@
-﻿var graine='@dFf*12;'; // Préfixe pour tous les mdp
+﻿var graine=''; // Préfixe pour tous les mdp
 var alCount=0; // Compteur d'alerte
 
 //-------------------------
 //      Initialisation
 //-------------------------
 
-function init(){
-	var lastEvent;
-	data.load();
-	data.applyFilter(true);
-	affichage.divFiltres=$('#filtres');
-	
-	if (data.user.RANK>=5) {
-		if (data.evenements.length>0) {
-			lastEvent=data.evenements[data.evenements.length-1].ID;
-			data.setFilter(true,{filtreE:lastEvent});
-		} else data.setFilter(true,null);
+function init(newGraine,rang){
+	graine=newGraine;
+	if (rang>0){ // Cas connecté
+		data.load();
 		data.applyFilter(true);
-		affichage.setPageActive(null);
-		affichage.trombinoscope();
-	} else {
-		afficherFormulaireModificationPersonne(-1);
+		affichage.divFiltres=$('#filtres');
+		if (data.user.RANK>=5) {
+			if (data.evenements.length>0) {
+				data.lastEventID=data.evenements[data.evenements.length-1].ID;
+				data.setFilter(true,{filtreE:data.lastEventID});
+			} else data.setFilter(true,null);
+			data.applyFilter(true);
+			affichage.setPageActive(null);
+			affichage.trombinoscope();
+		} else {
+			afficherFormulaireModificationPersonne(-1);
+		}
 	}
 }
+
+//----------------------------
+// Interface
+//-----------------------------
+function trombinoscopeButtonClick(){
+	if ((data.user!=null)&&(data.user.RANK>=5)) {
+		affichage.setPageActive(null);
+		if (data.lastEventID!=null) {
+			data.setFilter(true,{filtreE:data.lastEventID});
+			data.applyFilter(true);
+		}
+		affichage.trombinoscope();
+	}
+}
+
 
 //-------------------------
 //      Connexion
@@ -81,6 +97,7 @@ var data = {
 	user:null,	// ID, rang de l'utilisateur
 	personnes:[], // liste des personnes inscrites
 	evenements:[], // Liste des évènements
+	lastEventID:null, // ID du dernier évènement 
 	regions : [ // Liste des régions
 		{ID:0, NOM:"Inconnue"},
 		{ID:1, NOM:"Alsace"},

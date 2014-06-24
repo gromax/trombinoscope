@@ -11,7 +11,7 @@
 		if (isset($_POST['ID'])) {
 			$id=$_POST['ID'];
 			require_once('./conx/connexion.php');
-			$validPersonne = $connexion->prepare('UPDATE personnes SET SUG=0 WHERE ID=:id');
+			$validPersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET SUG=0 WHERE ID=:id');
 			try {
 				$validPersonne->execute(array('id'=>$id));
 			} catch( Exception $e ){

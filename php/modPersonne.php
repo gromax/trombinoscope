@@ -57,7 +57,7 @@
 			if ($requete!='') {
 				// Il y a donc une modification à faire
 				require_once('./conx/connexion.php');
-				$modPersonne = $connexion->prepare('UPDATE personnes SET '.$requete.' DATE=:date, HEURE=:heure, IP=:ip WHERE ID=:id');
+				$modPersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET '.$requete.' DATE=:date, HEURE=:heure, IP=:ip WHERE ID=:id');
 		
 				try {
 					$modPersonne->execute($params);

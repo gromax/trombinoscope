@@ -1,5 +1,11 @@
-﻿<?php include './authcheck.php'; ?>
-
+﻿<?php
+	include './php/authcheck.php';
+	if(isset($_SESSION['RANKtrombi'])) {
+		$rank=$_SESSION['RANKtrombi'];
+	} else {
+		$rank=0;
+	}
+?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <?php echo '<?xml version="1.0"?>'; ?>
 
@@ -24,127 +30,98 @@
 	
 	</head>
 	
-	<?php if(!isset($_SESSION['IDtrombi'])) { ?>
-	<!-- Cas déconnecté -->
-	<body>
-		<div class="container">
-			<div class="navbar-header">
-				<button data-target=".navbar-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a href="#" class="navbar-brand">Trombinoscope</a>
-			</div>
-			<!-- Collect the nav links, forms, and other content for toggling -->
-			<div class="collapse navbar-collapse">
-				<form role="form" class="navbar-form navbar-right" onsubmit="doValidConx();">
-					<div class="form-group">
-						<input type="text" class="form-control" id="loginInput" placeholder="Identifiant">
-					</div>
-					<div class="form-group">
-						<input type="password" class="form-control" id="pwdInput" placeholder="Mot de passe">
-					</div>
-					<button class="btn btn-success" type="submit">Valider</button>
-				</form>
-			</div><!--/.navbar-collapse -->
-		</div>
-
-	<?php } else {
-		if($_SESSION['RANKtrombi']>=5) {
-	?>
-	<!-- Cas connecté -->
-	
-		<body onload='init()'>
-			<div class="container-fluid">
-				<nav class="navbar navbar-default" role="navigation">
-				  <div class="container-fluid">
-					<!-- Brand and toggle get grouped for better mobile display -->
-					<div class="navbar-header">
-					  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+	<body onload="init('<?php echo PWD_SEED ?>', <?php echo $rank ?>)">
+		<nav class="navbar navbar-default" role="navigation">			
+			<div class="container">
+				<div class="navbar-header">
+					<button data-target=".navbar-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
 						<span class="sr-only">Toggle navigation</span>
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
-					  </button>
-					  <a class="navbar-brand" href="#" onclick="affichage.setPageActive(null); affichage.trombinoscope();">Trombinoscope</a>
-					</div>
+					</button>
+					<a class="navbar-brand" href="#" onclick="trombinoscopeButtonClick(); return false;">Trombinoscope</a>
+				</div>
+				<div class="collapse navbar-collapse">
 
-					<!-- Collect the nav links, forms, and other content for toggling -->
-					<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-					  <ul class="nav navbar-nav">
-						<!--<li class="active"><a href="#">Link</a></li>-->
-						<!--<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(true); affichage.liste();">Inscriptions</a></li>-->
+				<!-- Menu zone de gauche -->
+<?php if ($rank>0) { 
+	if ($rank>RANG_ADMIN) { ?>
+
+					<ul class="nav navbar-nav">
 						<li class="dropdown">
-						  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Personnes<b class="caret"></b></a>
-						  <ul class="dropdown-menu">
-							<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1);">Nouvelle</a></li>
-							<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Liste</a></li>
-							<li class="divider"></li>
-							<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Inscriptions</a></li>
-							<li class="divider"></li>
-							<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.trombinoscope()">Trombinoscope</a></li>
-						  </ul>
+					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Personnes<b class="caret"></b></a>
+					  		<ul class="dropdown-menu">
+								<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1);">Nouvelle</a></li>
+								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Liste</a></li>
+								<li class="divider"></li>
+								<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Inscriptions</a></li>
+								<li class="divider"></li>
+								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.trombinoscope()">Trombinoscope</a></li>
+					  		</ul>
 						</li>
 						<li class="dropdown">
-						  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Évènements<b class="caret"></b></a>
-						  <ul class="dropdown-menu">
-							<li><a href="#" onclick="afficherFormModificationEvenement(-1);">Nouveau</a></li>
-							<li><a href="#" onclick="afficherListeEvenements();">Liste</a></li>
-						  </ul>
+					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Évènements<b class="caret"></b></a>
+					  		<ul class="dropdown-menu">
+								<li><a href="#" onclick="afficherFormModificationEvenement(-1);">Nouveau</a></li>
+								<li><a href="#" onclick="afficherListeEvenements();">Liste</a></li>
+					  		</ul>
 						</li>
-					  </ul>
-					  <form class="navbar-form navbar-left" role="search" onsubmit="data.filtrerSelonRecherche($('#inpSearch').val()); affichage.setPageActive(null); affichage.liste(); return false;">
+				  	</ul>
+					 <form class="navbar-form navbar-left" role="search" onsubmit="data.filtrerSelonRecherche($('#inpSearch').val()); affichage.setPageActive(null); affichage.liste(); return false;">
 						<div class="form-group">
-						  <input type="text" id="inpSearch" class="form-control" placeholder="Search">
+							<input type="text" id="inpSearch" class="form-control" placeholder="Search">
 						</div>
 						<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
-					  </form>
-					  <ul class="nav navbar-nav navbar-right">
+					 </form>
+
+<?php	} elseif ($rank==RANG_ANONYME_CONTRIBUTOR) { ?>
+	
+					<ul class="nav navbar-nav">
+						<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
+						<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Mes ajouts</a></li>
+						<li><a href="#" onclick="affichage.personnesAvecPhoto();">Personnes dont nous avons déjà une photo</a></li>
+					</ul>
+
+<?php } } ?>
+
+				<!-- Menu zone de droite -->
+
+<?php if($rank==0) { ?>
+
+					<form role="form" class="navbar-form navbar-right" onsubmit="doValidConx();">
+						<div class="form-group">
+							<input type="text" class="form-control" id="loginInput" placeholder="Identifiant">
+						</div>
+						<div class="form-group">
+							<input type="password" class="form-control" id="pwdInput" placeholder="Mot de passe">
+						</div>
+						<button class="btn btn-success" type="submit">Valider</button>
+					</form>
+
+<?php } elseif($rank>=RANG_ADMIN) { ?>
+
+					 <ul class="nav navbar-nav navbar-right">
 						<li><a href="#" onclick="modifMonCompteForm();">Mon compte</a></li>
 						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
-					  </ul>
-					</div><!-- /.navbar-collapse -->
-				  </div><!-- /.container-fluid -->
-				</nav>
-			</div>
-	<?php }	else { ?>
-		<body onload='init();'>
-			<div class="container-fluid">
-				<nav class="navbar navbar-default" role="navigation">
-				  <div class="container-fluid">
-					<!-- Brand and toggle get grouped for better mobile display -->
-					<div class="navbar-header">
-					  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					  </button>
-					  <a class="navbar-brand" href="#" onclick="affichage.setPageActive(null); affichage.trombinoscope();">Trombinoscope</a>
-					</div>
+					</ul>
 
-					<!-- Collect the nav links, forms, and other content for toggling -->
-					<div class="collapse navbar-collapse" >
-						<ul class="nav navbar-nav">
-							<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
-							<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Mes ajouts</a></li>
-							<li><a href="#" onclick="affichage.personnesAvecPhoto();">Personnes dont nous avons déjà une photo</a></li>
-						</ul>
-						<ul class="nav navbar-nav navbar-right">
-							<li><a href="#" onclick="deconnexion();">Logout</a></li>
-						</ul>
-					</div><!-- /.navbar-collapse -->
-				  </div><!-- /.container-fluid -->
-				</nav>
+<?php }	elseif($rank==RANG_ANONYME_CONTRIBUTOR) { ?>
+					<ul class="nav navbar-nav navbar-right">
+						<li><a href="#" onclick="deconnexion();">Logout</a></li>
+					</ul>
+<?php } ?>		
+				</div>
 			</div>
-	<?}	} ?>		
-			
-			<div class="container">
-				<div id="filtres"></div>
-				<div class="row">
-					<div id="mainContent" class="col-md-10 col-md-offset-1 col-xs-12">
+		</nav>
+
+		<div class="container">
+			<div id="filtres"></div>
+			<div class="row">
+				<div id="mainContent" class="col-md-10 col-md-offset-1 col-xs-12">
+
+<?php if ($rank==0) { ?>
+
 					<h4>Qu'est ce que c'est ?</h4>
 					C'est un outil permettant de générer un trombinoscope sous format papier et, si vous êtes nombreux à le demander, en ligne. Ce trombinoscope est destiné à Lud'Été 2014, mais rien n'empêche qu'il serve à d'autres évènements.
 					Bien sûr, il n'ya rien d'obligatoire : vous pouvez venir à Lud'Été sans nous fournir de photo.
@@ -163,14 +140,10 @@
 						<li>Vous pouvez toujours modifier les personnes que vous avez ajoutées, ou même les supprimer.</li>
 						<li><strong>Attention !</strong> Dès que vous vous déconnectez, vous ne pouvez plus rien modifier : C'est le principe d'une boîte à lettre. Si vous avez un problème, pas de panique, vous pouvez toujours recommencer. Si nous avons des doublons, nous ferons le tri, et sinon, envoyez-nous un mail !</li>
 					</ul>
-					
-					
-					</div>
+<?php } ?>
 				</div>
 			</div>
-			<div class="cadreAlerte" id="alertes"></div>		
-
-		</body>
-	
-	
+		</div>
+		<div class="cadreAlerte" id="alertes"></div>		
+	</body>
 </html>

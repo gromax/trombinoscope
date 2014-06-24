@@ -3,7 +3,7 @@
 
 	if((isset($_POST['pwd'])) && (isset($_POST['login']))) {
 		require_once('./conx/connexion.php');
-		$select = $connexion->prepare('SELECT ID, PSEUDO, RANK FROM users WHERE PWD=:pwd AND PSEUDO=:login;');
+		$select = $connexion->prepare('SELECT ID, PSEUDO, RANK FROM '.$prefixeDB.'users WHERE PWD=:pwd AND PSEUDO=:login;');
 		$select->execute(array('pwd'=>$_POST['pwd'],'login'=>$_POST['login']));
 		if ($personne = $select->fetch(PDO::FETCH_ASSOC)){
 			$_SESSION['IDtrombi']=$personne['ID'];

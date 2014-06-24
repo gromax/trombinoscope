@@ -6,8 +6,8 @@
 			require_once('./conx/connexion.php');
 			$idE=$_POST['idE'];
 			
-			$deleteParticipations = $connexion->prepare('DELETE FROM participations WHERE IDE=:ide;');
-			$deleteEvenement = $connexion->prepare('DELETE FROM evenements WHERE ID=:ide;');
+			$deleteParticipations = $connexion->prepare('DELETE FROM '.$prefixeDB.'participations WHERE IDE=:ide;');
+			$deleteEvenement = $connexion->prepare('DELETE FROM '.$prefixeDB.'evenements WHERE ID=:ide;');
 
 			try {
 				$deleteParticipations->execute(array('ide'=>$idE));

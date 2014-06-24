@@ -8,7 +8,7 @@
 	// Il faut être de rang 2 ou plus
 	if ($_SESSION['RANKtrombi']>=2){
 		require_once('./conx/connexion.php');
-		$select = $connexion->prepare('SELECT ID, NOM, PRENOM, VILLE, DATE FROM personnes WHERE SUG=0 AND PHOTO !="" ORDER BY NOM,PRENOM ASC;');
+		$select = $connexion->prepare('SELECT ID, NOM, PRENOM, VILLE, DATE FROM '.$prefixeDB.'personnes WHERE SUG=0 AND PHOTO !="" ORDER BY NOM,PRENOM ASC;');
 		$jsonData='';
 		$select->execute();
 		while( $personne = $select->fetch(PDO::FETCH_ASSOC) ) { // on récupère la liste des membres

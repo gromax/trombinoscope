@@ -12,7 +12,7 @@
 			$IDE=$_POST['IDE'];
 
 			// Préparation de la requète
-			$delete = $connexion->prepare('DELETE FROM participations WHERE IDP=:idp AND IDE=:ide;');
+			$delete = $connexion->prepare('DELETE FROM '.$prefixeDB.'participations WHERE IDP=:idp AND IDE=:ide;');
 			try {
 				// envoie de la requète
 				$delete->execute(array('idp'=>$IDP,'ide'=>$IDE));

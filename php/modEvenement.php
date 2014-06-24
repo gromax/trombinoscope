@@ -9,7 +9,7 @@
 			$nom=$_POST['nom'];
 			
 			if ($id>0) {
-				$query=$connexion->prepare('UPDATE evenements SET NOM=:nom WHERE ID=:id;');
+				$query=$connexion->prepare('UPDATE '.$prefixeDB.'evenements SET NOM=:nom WHERE ID=:id;');
 				try {
 					$query->execute(array('nom'=>$nom, 'id'=>$id));
 					$id=$connexion->lastInsertId();
@@ -18,7 +18,7 @@
 				}
 				die ('({state:"success", insertedID:'.$id.'})');
 			} else {
-				$query=$connexion->prepare('INSERT INTO evenements (NOM) VALUES (:nom);');
+				$query=$connexion->prepare('INSERT INTO '.$prefixeDB.'evenements (NOM) VALUES (:nom);');
 				try {
 					$query->execute(array('nom'=>$nom, 'id'=>$id));
 				} catch( Exception $e ){

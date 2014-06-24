@@ -13,6 +13,6 @@ try {
   );
   $connexion = new PDO( $dns, $utilisateur, $motDePasse, $options );
 } catch ( Exception $e ) {
-  die('({status:"failed",error:$e->getMessage()})');
+  die("({status:'failed',error:'".$e->getMessage()."'})");
 }
 ?>

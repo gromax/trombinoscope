@@ -24,7 +24,7 @@
 			else $S=1;
 			
 			// Préparation de la reqête
-			$addPersonnePrepa = $connexion->prepare('INSERT INTO personnes (NOM, PRENOM, VILLE, HOBBY, IDREGION, VL, EP, SUG, DATE, HEURE, IP, DIVERS) VALUES (:nom, :prenom, :ville, :hobby, :idR, :vl , :ep , :sug , :date, :heure, :ip, :div)'); 
+			$addPersonnePrepa = $connexion->prepare('INSERT INTO '.$prefixeDB.'personnes (NOM, PRENOM, VILLE, HOBBY, IDREGION, VL, EP, SUG, DATE, HEURE, IP, DIVERS) VALUES (:nom, :prenom, :ville, :hobby, :idR, :vl , :ep , :sug , :date, :heure, :ip, :div)'); 
 			
 			$params=array(
 				'nom'=>$_POST['NOM'],

@@ -14,7 +14,7 @@
 			$IDP=$_POST['IDP'];
 			$IDE=$_POST['IDE'];
 			// Préparation de la requète
-			$insertPrepa = $connexion->prepare('INSERT INTO participations (IDP, IDE) VALUES (:idp , :ide);');
+			$insertPrepa = $connexion->prepare('INSERT INTO '.$prefixeDB.'participations (IDP, IDE) VALUES (:idp , :ide);');
 			try {
 				// envoie de la requète
 				$insert = $insertPrepa->execute(array('idp'=>$IDP,'ide'=>$IDE));

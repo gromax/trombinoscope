@@ -14,21 +14,21 @@
 		require_once('./conx/connexion.php');
 
 		// Préparation des requêtes
-		$selectPrepa = $connexion->prepare('SELECT PHOTO FROM personnes WHERE ID=:id ;'); // Récupération du nom de la photo pour effacement
-		$deleteParticipationsPrepa = $connexion->prepare('DELETE FROM participations WHERE IDP=:idp;');
-		$deletePersonnePrepa = $connexion->prepare('DELETE FROM personnes WHERE ID=:idp;');
+		$selectPersonne = $connexion->prepare('SELECT PHOTO FROM '.$prefixeDB.'personnes WHERE ID=:id ;'); // Récupération du nom de la photo pour effacement
+		$deleteParticipations = $connexion->prepare('DELETE FROM '.$prefixeDB.'participations WHERE IDP=:idp;');
+		$deletePersonne = $connexion->prepare('DELETE FROM '.$prefixeDB.'personnes WHERE ID=:idp;');
 
 		try {
 			// envoie des requêtes
 			
 			// Suppression de l'image
-			$selectPrepa->execute(array('id'=>$id ));
-			while( $personne = $selectPrepa->fetch(PDO::FETCH_ASSOC) ) {
+			$selectPersonne->execute(array('id'=>$id ));
+			while( $personne = $selectPersonne->fetch(PDO::FETCH_ASSOC) ) {
 				if( file_exists("../img/".$personne['PHOTO'].".jpg")) unlink("../img/".$personne['PHOTO'].".jpg") ;
 			}
-			$selectPrepa->closeCursor();
-			$deleteParticipations = $deleteParticipationsPrepa->execute(array('idp'=>$id));
-			$deletePersonne = $deletePersonnePrepa->execute(array('idp'=>$id));
+			$selectPersonne->closeCursor();
+			$deleteParticipations->execute(array('idp'=>$id));
+			$deletePersonne->execute(array('idp'=>$id));
 		} catch( Exception $e ){
 			die('({state:"failed",error:"Del personne : '.$e->getMessage().'"})');
 		}

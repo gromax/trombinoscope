@@ -27,8 +27,8 @@
 	if ( ($_POST['idPersonne']) && ( ($_SESSION['RANKtrombi']>=7) || ( ($_SESSION['RANKtrombi']>=2) && ( isset($_SESSION['mySugs'][$_POST['idPersonne']])) ) ) ){
 		if(isset($_FILES['avatar'])){
 			require_once('./conx/connexion.php');
-			$selectPrepa = $connexion->prepare('SELECT PHOTO FROM personnes WHERE ID=:id ;');
-			$updatePrepa = $connexion->prepare('UPDATE personnes SET PHOTO=:photo WHERE ID=:id ;');
+			$selectPersonne = $connexion->prepare('SELECT PHOTO FROM '.$prefixeDB.'personnes WHERE ID=:id ;');
+			$updatePersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET PHOTO=:photo WHERE ID=:id ;');
 			
 			$id=$_POST['idPersonne'];
 			$extensions = array('.jpg','.jpeg');
@@ -38,16 +38,16 @@
 			if(!in_array($extension, $extensions)) {
 				die($scrB.'({state:"failed",error:"bad file type"})'.$scrE);
 			} elseif($taille>$taille_maxi) {
-				die($scrB.'({state:"failed",error:"file is too big"})'.$scrE);
+				die($scrB.'({state:"failed",error:"Fichier trop gros"})'.$scrE);
 			} else {
 				$fichier = basename($_FILES['avatar']['name']);
 				if(move_uploaded_file($_FILES['avatar']['tmp_name'], $imgFolder . $id.'.jpg')) {
 					// Effacement de l'ancienne photo
-					$selectPrepa->execute(array('id'=>$id ));
-					while( $personne = $selectPrepa->fetch(PDO::FETCH_ASSOC) ) {
+					$selectPersonne->execute(array('id'=>$id ));
+					while( $personne = $selectPersonne->fetch(PDO::FETCH_ASSOC) ) {
 						if( file_exists("../img/".$personne['PHOTO'].".jpg")) unlink("../img/".$personne['PHOTO'].".jpg") ;
 					}
-					$selectPrepa->closeCursor();
+					$selectPersonne->closeCursor();
 
 					$imgS = ImageCreateFromJpeg($imgFolder . $id.'.jpg')
 						or die ('<script> window.top.window.loadTrigger(eval({state:"failed", error:"'.$imgFile.'  Erreur lors de la création de l\'image"}));</script>');
@@ -59,7 +59,7 @@
 					$strMD5=md5_file($sourceFile).$id;
 					rename($sourceFile,$imgFolder.$strMD5.'.jpg');
 
-					$updatePrepa->execute(array('photo'=>$strMD5, 'id'=>$id ));
+					$updatePersonne->execute(array('photo'=>$strMD5, 'id'=>$id ));
 					die($scrB.'({state:"success",id:'.$id.',PHOTO:"'.$strMD5.'"})'.$scrE);
 				} else {
 					die($scrB.'({state:"failed",error:"upload failed"})'.$scrE);

@@ -1,5 +1,4 @@
-﻿/* Définition des zones de la page */
-body { height:100%; margin: 0px; padding: 0px; font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif; }
+﻿body { height:100%; margin: 0px; padding: 0px; font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif; }
 p {margin:2px;}
 
 .tdTrombi{ /* élément du tableau trombinoscope */
@@ -12,97 +11,9 @@ p {margin:2px;}
 	height:0px;
 	width:0px;
 }
-	
-.imgBtn{ /* Pour faire d'une photo un bouton. A supprimer */
-	cursor:pointer;
-}
 
 .cadreAlerte{
 	position:absolute;
 	left:100px;
 	top:50px;
-}
-
-.monCadre{ /* Utiliser seulement pour le cadre de chargement de la photo */
-  border-bottom-left-radius:4px;
-  border-bottom-right-radius:4px;
-  border-top-left-radius:4px;
-  border-top-right-radius:4px;
-  margin:15px 0;
-  padding:39px 19px 30px;
-  position:absolute;
-  left:0px;
-  top:0px;
-}
-
-.cadre-ajoutPhotoColor{ /* Pour le choix de la couleur. A fusionner avec le précédent ? */
-	background-color:#FFFFFF;
-	border:1px solid #DDDDDD;
-}
-
-.monCadre-entete{ /* Pour placer un titre à un cadre */
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    padding: 3px 7px;
-    font-size: 12px;
-    font-weight: bold;
-    -webkit-border-radius: 4px 0 4px 0;
-    -moz-border-radius: 4px 0 4px 0;
-    border-radius: 4px 0 4px 0;
-}
-
-.entete-ajoutPhotoColor{ /* Couleur pour le précédent. A fusionner ?*/
-    background-color: whiteSmoke;
-    border: 1px solid #DDD;
-    color: #9DA0A4;
-}
-
-.monCadre-entete-bouton{ /* Pour placer un bouton dans l'entête, aligné sur la droite*/
-    position: absolute;
-    top: -1px;
-    right: -1px;
-    padding: 3px 7px;
-    font-size: 12px;
-    font-weight: bold;
-    -webkit-border-radius: 0 4px 0 4px;
-    -moz-border-radius: 0 4px 0 4px;
-    border-radius: 0 4px 0 4px;
-}
-
-
-
-
-
-
-
-
-.monCadre-pied{
-    position: absolute;
-    bottom: -1px;
-    left: -1px;
-    padding: 3px 7px;
-    font-size: 12px;
-    font-weight: bold;
-    -webkit-border-radius: 0 4px 0 4px;
-    -moz-border-radius: 0 4px 0 4px;
-    border-radius: 0 4px 0 4px;
-}
-
-.entete-ficheColor{
-    background-color: whiteSmoke;
-    border: 1px solid #DDD;
-    color: #9DA0A4;
-}
-
-.entete-persoColor{
-    background-color: whiteSmoke;
-    border: 1px solid #B94A48;
-    color: #B94A48;
-}
-
-.entete-lieuColor{
-    background-color: whiteSmoke;
-    border: 1px solid #3A87AD;
-    color: #3A87AD;
 }
