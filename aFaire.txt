@@ -1,8 +1,0 @@
-- Outil de cadrage
-- Création des pdf de trombinoscopes
-- Dispositif anti-doublon
-- N'afficher que ce ceux qui ont donné leur photo
-
-- Possibilité de changer ses données ?
-
-- Le lien inverse de évènement à personne n'est peut-être plus ut?ile.
