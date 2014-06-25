@@ -1,17 +1,15 @@
-﻿var graine=''; // Préfixe pour tous les mdp
-var alCount=0; // Compteur d'alerte
+﻿var alCount=0; // Compteur d'alerte
 
 //-------------------------
 //      Initialisation
 //-------------------------
 
-function init(newGraine,rang){
-	graine=newGraine;
-	if (rang>0){ // Cas connecté
+function init(){
+	if (RANK>0){ // Cas connecté
 		data.load();
 		data.applyFilter(true);
 		affichage.divFiltres=$('#filtres');
-		if (data.user.RANK>=5) {
+		if (RANK>=RANG_VISITOR) {
 			if (data.evenements.length>0) {
 				data.lastEventID=data.evenements[data.evenements.length-1].ID;
 				data.setFilter(true,{filtreE:data.lastEventID});
@@ -29,7 +27,7 @@ function init(newGraine,rang){
 // Interface
 //-----------------------------
 function trombinoscopeButtonClick(){
-	if ((data.user!=null)&&(data.user.RANK>=5)) {
+	if (RANK>=RANG_VISITOR) {
 		affichage.setPageActive(null);
 		if (data.lastEventID!=null) {
 			data.setFilter(true,{filtreE:data.lastEventID});
@@ -39,6 +37,311 @@ function trombinoscopeButtonClick(){
 	}
 }
 
+
+//--------------------------------
+// Interface liée aux évènements
+//--------------------------------
+
+// Création de l'interface permettant de modifier un évènement
+function afficherFormModificationEvenement(ev){
+	var ev, id;
+	var container;
+	var context;
+	
+	if (typeof ev == 'object') {
+		if (ev==null) {
+			id=-1;
+		} else {
+			id=ev.ID;
+		}
+	} else {
+		id=ev;
+		ev=data.getEvenementById(id);
+	}
+
+	evNom="";
+	if (ev!=null) evNom=ev.NOM;
+	
+	container=$("#mainContent");
+	container.empty();
+	
+	var source   = $("#modAdd-event-template").html();
+	var template = Handlebars.compile(source);
+	
+	context = {nom:evNom};
+	if (id!=-1) { context.mod=true; }
+	container.append(template(context));
+	$("#modifEvenement").submit(function() { doAddModEvenement(id); return false; });
+}
+
+// Validation de l'interface précédente - id=-1 pour ajout
+function doAddModEvenement(id){
+	id = typeof id !== 'undefined' ? id : -1;
+	
+	var nom=trim($('#inputNom').val());
+	var reponse=manager.addModEvenement(id,nom);
+
+	if (reponse.state=="success") {
+		if (id==-1) {
+			data.addEvent({ID:reponse.insertedID, NOM:nom, liens:[]});
+			addAlert("<i>"+nom+"</i> a bien été ajouté(e).",1);
+		} else {
+			data.modEvent(id,{NOM:nom});
+			addAlert("L'évènement <i>"+nom+"</i> a bien été modifié(e).",1);
+		}
+	} else {
+		if (id==-1) addAlert("L'ajout n'a pu être effectué.",0);
+		else addAlert("La modification n'a pu être effectué.",0);
+	}
+}
+
+// Affichage de la liste des évènements
+function afficherListeEvenements(){
+	var container=$("#mainContent");
+	container.empty();
+
+	var source   = $("#liste-event-template").html();
+	var template = Handlebars.compile(source);
+	
+	context = {evenements:data.evenements};
+	container.append(template(context));
+	
+	// Activation des boutons
+	if (RANK>=RANG_ADMIN) {
+		$("a[name|='edit']").bind("click",function(){afficherFormModificationEvenement(this.getAttribute("idE")); return false; });
+	}
+	$("a[name|='trombi']").bind("click",function(){data.setFilter(true,{filtreE:this.getAttribute("idE")}); data.applyFilter(true); affichage.setPageActive(null); affichage.trombinoscope(); return false;});
+
+}
+
+//------------------------------
+// Interface liée aux personnes
+//------------------------------
+
+// Choisi, suivant le cas, entre l'affichage d'une personne et le formulaire de modification
+function choixModifOuAffichage(id){
+	var personne;
+	if (typeof id == 'object') {
+		if (id==null) {
+			personne=null;
+			id=-1;
+		} else {
+			personne=id;
+			id=personne.ID;
+		}
+	} else {
+		personne=data.getPersonneById(id);
+	}
+
+	if (personne==null) { afficherFormulaireModificationPersonne(null); }
+	else {
+		if ((RANK>RANG_ADMIN)||(personne.SUG==1)) {
+			afficherFormulaireModificationPersonne(personne);
+		} else {
+			affichage.personne(personne);
+		}
+	}
+}
+
+// Création de l'interface permettant de modifier une personne
+function afficherFormulaireModificationPersonne(id){
+	var container=$("#mainContent");
+	var context={};
+	var personne, nouvelleRegion, nouvelEvenement;
+	var i;
+	
+	if (typeof id == 'object') {
+		if (id==null) {
+			personne=null;
+			id=-1;
+		} else {
+			personne=id;
+			id=personne.ID;
+		}
+	} else {
+		personne=data.getPersonneById(id);
+	}
+	
+	//--- Création du contexte -------
+	if (personne==null){
+		context.ID=-1;
+		context.NOM="";
+		context.PRENOM="";
+		context.VILLE="";
+		context.HOBBY="";
+		context.DIVERS="";
+	} else {
+		context.ID=personne.ID;
+		context.NOM=personne.NOM;
+		context.PRENOM=personne.PRENOM;
+		context.VILLE=personne.VILLE;
+		context.HOBBY=personne.HOBBY;
+		context.DIVERS=personne.DIVERS;
+		context.affCommandes=true;
+		if (personne.VL==1) { context.VL=true; }
+		if (personne.EP==1) { context.EP=true; }
+		context.affPhoto=true;
+		if (personne.PHOTO!='') { context.PHOTO=personne.PHOTO; }
+	}
+	context.regions=[];
+	for (i=0;i<data.regions.length;i++) {
+		nouvelleRegion={IDR:data.regions[i].ID, NOM:data.regions[i].NOM};
+		if ((personne!=null)&&(personne.IDREGION==data.regions[i].ID)) { nouvelleRegion.sel=true; }
+		context.regions.push(nouvelleRegion);
+	}
+	
+	if (personne!=null) {
+		context.evenements=[];
+		for (i=0;i<data.evenements.length;i++) {
+			nouvelEvenement={IDE:data.evenements[i].ID, NOM:data.evenements[i].NOM};
+			if (personne.liens.indexOf(data.evenements[i])>=0) { nouvelEvenement.actif=true; }
+			context.evenements.push(nouvelEvenement);
+		}
+	}
+	
+	//--- Applcation du contexte au template handlebars -------
+	
+	var source   = $("#modification-personne-template").html();
+	var template = Handlebars.compile(source);
+
+	container.empty();
+	container.append(template(context));
+	
+	//--- Création des évènements  -------
+	$('#precButton').bind("click", function() { choixModifOuAffichage(data.getPrev(this.getAttribute("idP"),false)); });
+	$('#nextButton').bind("click", function() { choixModifOuAffichage(data.getNext(this.getAttribute("idP"))); });
+	$('#delButton').bind("click", function() { var idP=this.getAttribute("idP"); if(delPersonne(idP)) { choixModifOuAffichage(data.getPrev(idP,true));} });
+	$('#retourButton').bind("click", function() { affichage.setPageActive(this.getAttribute("idP")); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
+	$('#nouveauButton').bind("click", function() { afficherFormulaireModificationPersonne(-1); });
+	$('#personneModif').submit(function(){ var id=validerFormulaireModificationPersonne(this.getAttribute("idP")); if(id!=-1) { choixModifOuAffichage(id); } return false; });
+	$("a[name|='evenement']").bind("click",toggleParticipationAEvenement);
+	$('input[type=file]').bootstrapFileInput();
+}
+
+// Validation du formulaire de modification d'une personne
+function validerFormulaireModificationPersonne(id){
+	var reponse;
+	var parametres={ID:id,VL:0,EP:0};
+	
+	parametres.NOM=trim($('#inputNom').val());
+	parametres.PRENOM=trim($('#inputPrenom').val());
+	parametres.VILLE=trim($('#inputVille').val());
+	parametres.HOBBY=trim($('#inputHobbys').val());
+	parametres.DIVERS=trim($('#inputDivers').val());
+	parametres.IDREGION=trim($('#selectRegion').val());
+	if ($('#inputVL').is(":checked")) { parametres.VL=1; }
+	if ($('#inputEP').is(":checked")) { parametres.EP=1; }
+	
+	if (parametres.ID==-1) {
+		reponse=manager.addPersonne(parametres);
+	} else {
+		reponse=manager.modPersonne(parametres);
+	}
+	
+	if (reponse.state=="success") {
+		if (id==-1) {
+			parametres.ID=reponse.insertedID;
+			data.addPersonne(parametres);
+			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été ajouté(e).",1);
+		} else {
+			data.modPersonne(id,parametres);
+			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été modifié(e).",1);
+		}
+		return parametres.ID;
+	} else {
+		addAlert("La modification a échoué.",0);
+	}
+	return -1;
+}
+
+// Fait basculer Vrai/Faux la participation d'une personne à un évènement
+function toggleParticipationAEvenement(){
+	var actif=this.getAttribute("actif");
+	var ide=this.getAttribute("idE");
+	var idp=this.getAttribute("idP");
+	var reponse;
+
+	if (actif==0) {
+		reponse=manager.addLien(idp,ide);
+		if (reponse.state=="success"){
+			data.addLien(idp,ide);
+			$(this).addClass('list-group-item-success');
+			this.setAttribute("actif",1);
+		} else {
+			addAlert("Échec de la modification",0);
+		}
+	} else {
+		reponse=manager.removeLien(idp,ide);
+		if (reponse.state=="success"){
+			data.removeLien(idp,ide);
+			$(this).removeClass('list-group-item-success');
+			this.setAttribute("actif",0);
+		} else {
+			addAlert("Échec de la modification",0);
+		}
+	}
+}
+
+
+//suppression d'une personne (force permet d'éviter le prompt)
+function delPersonne(id,force){
+	var i;
+	var personne;
+	var reponse;
+	force = typeof force !== 'undefined' ? force : false;
+
+	personne=data.getPersonneById(id);
+	if (personne!=null){
+		if (force||confirm("Confirmez-vous la suppression de "+personne.PRENOM+" "+personne.NOM+" ?")) {
+			reponse=manager.delPersonne(personne.ID);
+			if ((reponse.state=="success")||(reponse.state=="failed (2)")) {
+				data.supprimerLiensDePersonne(personne);
+			}
+			if (reponse.state=="success"){
+				data.personnes.splice(data.personnes.indexOf(personne),1);
+				addAlert("<i>"+personne.PRENOM+" "+personne.NOM+"</i> a bien été supprimé(e).",1);
+				return true;
+			}
+		}
+	}
+	addAlert("<i>"+personne.PRENOM+" "+personne.NOM+"</i> n'a pu être supprimé(e).",0);
+	return false;
+}
+
+// Retour du chargement d'une image
+function loadTrigger(callBack){
+	var it;
+	var id;
+	var photo;
+	var nodePhoto;
+	var urlImg="./img/";
+	if (callBack.state=='success') {
+		id=callBack.id;
+		photo=callBack.PHOTO;
+		it=data.getPersonneById(id);
+		if (it!=null) { it.PHOTO=photo; }
+		nodePhoto=$("#photo");
+		if (nodePhoto.length>0){
+			nodePhoto.attr("src", urlImg+photo+".jpg");
+		}
+	} else addAlert("<strong>Echec !</strong> "+callBack.error,0);
+}
+
+// Validation de personnes, avec le bouton dans la liste
+function validationPersonnes(){
+	var reponse;
+	var checkeds=$("input:checked");
+	checkeds.each(function(items){
+		var id=$(this).attr("idP");
+		var p=data.getPersonneById(id);
+		if ((p!=null)&&(p.SUG==1)) {
+			reponse=manager.validPersonne(p.ID);
+			if(reponse.state=="success") { data.validPersonne(p); }
+			else { addAlert("Échec lors de la validation de <i>"+p.PRENOM+" "+p.NOM+"</i>",0); }
+		}
+	});
+	affichage.liste();
+}
 
 //-------------------------
 //      Connexion
@@ -52,7 +355,7 @@ function doValidConx(){
 	var pwd=pwdInput.val();
 	loginInput.val('');
 	pwdInput.val('');
-	data.user=manager.post('./php/login.php',{pwd:MD5(graine+pwd),login:login});
+	data.user=manager.post('./php/login.php',{pwd:MD5(PWD_SEED+pwd),login:login});
 	location.reload();
 }
 
@@ -262,7 +565,7 @@ data.addPersonne=function(submitedPersonne){
 	submitedPersonne.MAJ2=majSansAccent(submitedPersonne.PRENOM+submitedPersonne.NOM);
 	submitedPersonne.DATE=getDate();
 	submitedPersonne.HEURE=getTime();
-	submitedPersonne.SUG = data.user.RANK>=7 ? 0 : 1;
+	submitedPersonne.SUG = RANK>=RANG_ADMIN ? 0 : 1;
 	submitedPersonne.PHOTO='';
 	this.personnes.push(submitedPersonne);
 	this.personnes.sort(comparePersonnesAlpha);
@@ -422,286 +725,6 @@ data.validPersonne=function(personne){
 	if (personne!=null) { personne.SUG=0; }
 }
 
-//--------------------------------
-// Interface liée aux évènements
-//--------------------------------
-
-// Création de l'interface permettant de modifier un évènement
-function afficherFormModificationEvenement(ev){
-	var ev, id;
-	var container;
-	var context;
-	
-	if (typeof ev == 'object') {
-		if (ev==null) {
-			id=-1;
-		} else {
-			id=ev.ID;
-		}
-	} else {
-		id=ev;
-		ev=data.getEvenementById(id);
-	}
-
-	evNom="";
-	if (ev!=null) evNom=ev.NOM;
-	
-	container=$("#mainContent");
-	container.empty();
-	
-	var source   = $("#modAdd-event-template").html();
-	var template = Handlebars.compile(source);
-	
-	context = {nom:evNom};
-	if (id!=-1) { context.mod=true; }
-	container.append(template(context));
-	$("#modifEvenement").submit(function() { doAddModEvenement(id); return false; });
-}
-
-// Validation de l'interface précédente - id=-1 pour ajout
-function doAddModEvenement(id){
-	id = typeof id !== 'undefined' ? id : -1;
-	
-	var nom=trim($('#inputNom').val());
-	var reponse=manager.addModEvenement(id,nom);
-
-	if (reponse.state=="success") {
-		if (id==-1) {
-			data.addEvent({ID:reponse.insertedID, NOM:nom, liens:[]});
-			addAlert("<i>"+nom+"</i> a bien été ajouté(e).",1);
-		} else {
-			data.modEvent(id,{NOM:nom});
-			addAlert("L'évènement <i>"+nom+"</i> a bien été modifié(e).",1);
-		}
-	} else {
-		if (id==-1) addAlert("L'ajout n'a pu être effectué.",0);
-		else addAlert("La modification n'a pu être effectué.",0);
-	}
-}
-
-// Affichage de la liste des évènements
-function afficherListeEvenements(){
-	var container=$("#mainContent");
-	container.empty();
-
-	var source   = $("#liste-event-template").html();
-	var template = Handlebars.compile(source);
-	
-	context = {evenements:data.evenements};
-	container.append(template(context));
-	
-	// Activation des boutons
-	if (data.user.RANK>=7) {
-		$("a[name|='edit']").bind("click",function(){afficherFormModificationEvenement(this.getAttribute("idE")); return false; });
-	}
-	$("a[name|='trombi']").bind("click",function(){data.setFilter(true,{filtreE:this.getAttribute("idE")}); data.applyFilter(true); affichage.setPageActive(null); affichage.trombinoscope(); return false;});
-
-}
-
-//------------------------------
-// Interface liée aux personnes
-//------------------------------
-
-// Création de l'interface permettant de modifier une personne
-function afficherFormulaireModificationPersonne(id){
-	var container=$("#mainContent");
-	var context={};
-	var personne, nouvelleRegion, nouvelEvenement;
-	var i;
-	
-	if (typeof id == 'object') {
-		if (id==null) {
-			personne=null;
-			id=-1;
-		} else {
-			personne=id;
-			id=personne.ID;
-		}
-	} else {
-		personne=data.getPersonneById(id);
-	}
-	
-	//--- Création du contexte -------
-	if (personne==null){
-		context.ID=-1;
-		context.NOM="";
-		context.PRENOM="";
-		context.VILLE="";
-		context.HOBBY="";
-		context.DIVERS="";
-	} else {
-		context.ID=personne.ID;
-		context.NOM=personne.NOM;
-		context.PRENOM=personne.PRENOM;
-		context.VILLE=personne.VILLE;
-		context.HOBBY=personne.HOBBY;
-		context.DIVERS=personne.DIVERS;
-		context.affCommandes=true;
-		if (personne.VL==1) { context.VL=true; }
-		if (personne.EP==1) { context.EP=true; }
-		context.affPhoto=true;
-		if (personne.PHOTO!='') { context.PHOTO=personne.PHOTO; }
-	}
-	context.regions=[];
-	for (i=0;i<data.regions.length;i++) {
-		nouvelleRegion={IDR:data.regions[i].ID, NOM:data.regions[i].NOM};
-		if ((personne!=null)&&(personne.IDREGION==data.regions[i].ID)) { nouvelleRegion.sel=true; }
-		context.regions.push(nouvelleRegion);
-	}
-	
-	if (personne!=null) {
-		context.evenements=[];
-		for (i=0;i<data.evenements.length;i++) {
-			nouvelEvenement={IDE:data.evenements[i].ID, NOM:data.evenements[i].NOM};
-			if (personne.liens.indexOf(data.evenements[i])>=0) { nouvelEvenement.actif=true; }
-			context.evenements.push(nouvelEvenement);
-		}
-	}
-	
-	//--- Applcation du contexte au template handlebars -------
-	
-	var source   = $("#modification-personne-template").html();
-	var template = Handlebars.compile(source);
-
-	container.empty();
-	container.append(template(context));
-	
-	//--- Création des évènements  -------
-	$('#precButton').bind("click", function() { afficherFormulaireModificationPersonne(data.getPrev(this.getAttribute("idP"),false)); });
-	$('#nextButton').bind("click", function() { afficherFormulaireModificationPersonne(data.getNext(this.getAttribute("idP"))); });
-	$('#delButton').bind("click", function() { var idP=this.getAttribute("idP"); if(delPersonne(idP)) { afficherFormulaireModificationPersonne(data.getPrev(idP,true));} });
-	$('#retourButton').bind("click", function() { affichage.setPageActive(this.getAttribute("idP")); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
-	$('#nouveauButton').bind("click", function() { afficherFormulaireModificationPersonne(-1); });
-	$('#personneModif').submit(function(){ var id=validerFormulaireModificationPersonne(this.getAttribute("idP")); if(id!=-1) { afficherFormulaireModificationPersonne(id); } return false; });
-	$("a[name|='evenement']").bind("click",toggleParticipationAEvenement);
-	$('input[type=file]').bootstrapFileInput();
-}
-
-// Validation du formulaire de modification d'une personne
-function validerFormulaireModificationPersonne(id){
-	var reponse;
-	var parametres={ID:id,VL:0,EP:0};
-	
-	parametres.NOM=trim($('#inputNom').val());
-	parametres.PRENOM=trim($('#inputPrenom').val());
-	parametres.VILLE=trim($('#inputVille').val());
-	parametres.HOBBY=trim($('#inputHobbys').val());
-	parametres.DIVERS=trim($('#inputDivers').val());
-	parametres.IDREGION=trim($('#selectRegion').val());
-	if ($('#inputVL').is(":checked")) { parametres.VL=1; }
-	if ($('#inputEP').is(":checked")) { parametres.EP=1; }
-	
-	if (parametres.ID==-1) {
-		reponse=manager.addPersonne(parametres);
-	} else {
-		reponse=manager.modPersonne(parametres);
-	}
-	
-	if (reponse.state=="success") {
-		if (id==-1) {
-			parametres.ID=reponse.insertedID;
-			data.addPersonne(parametres);
-			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été ajouté(e).",1);
-		} else {
-			data.modPersonne(id,parametres);
-			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été modifié(e).",1);
-		}
-		return parametres.ID;
-	} else {
-		addAlert("La modification a échoué.",0);
-	}
-	return -1;
-}
-
-// Fait basculer Vrai/Faux la participation d'une personne à un évènement
-function toggleParticipationAEvenement(){
-	var actif=this.getAttribute("actif");
-	var ide=this.getAttribute("idE");
-	var idp=this.getAttribute("idP");
-	var reponse;
-
-	if (actif==0) {
-		reponse=manager.addLien(idp,ide);
-		if (reponse.state=="success"){
-			data.addLien(idp,ide);
-			$(this).addClass('list-group-item-success');
-			this.setAttribute("actif",1);
-		} else {
-			addAlert("Échec de la modification",0);
-		}
-	} else {
-		reponse=manager.removeLien(idp,ide);
-		if (reponse.state=="success"){
-			data.removeLien(idp,ide);
-			$(this).removeClass('list-group-item-success');
-			this.setAttribute("actif",0);
-		} else {
-			addAlert("Échec de la modification",0);
-		}
-	}
-}
-
-
-//suppression d'une personne (force permet d'éviter le prompt)
-function delPersonne(id,force){
-	var i;
-	var personne;
-	var reponse;
-	force = typeof force !== 'undefined' ? force : false;
-
-	personne=data.getPersonneById(id);
-	if (personne!=null){
-		if (force||confirm("Confirmez-vous la suppression de "+personne.PRENOM+" "+personne.NOM+" ?")) {
-			reponse=manager.delPersonne(personne.ID);
-			if ((reponse.state=="success")||(reponse.state=="failed (2)")) {
-				data.supprimerLiensDePersonne(personne);
-			}
-			if (reponse.state=="success"){
-				data.personnes.splice(data.personnes.indexOf(personne),1);
-				addAlert("<i>"+personne.PRENOM+" "+personne.NOM+"</i> a bien été supprimé(e).",1);
-				return true;
-			}
-		}
-	}
-	addAlert("<i>"+personne.PRENOM+" "+personne.NOM+"</i> n'a pu être supprimé(e).",0);
-	return false;
-}
-
-// Retour du chargement d'une image
-function loadTrigger(callBack){
-	var it;
-	var id;
-	var photo;
-	var nodePhoto;
-	var urlImg="./img/";
-	if (callBack.state=='success') {
-		id=callBack.id;
-		photo=callBack.PHOTO;
-		it=data.getPersonneById(id);
-		if (it!=null) { it.PHOTO=photo; }
-		nodePhoto=$("#photo");
-		if (nodePhoto.length>0){
-			nodePhoto.attr("src", urlImg+photo+".jpg");
-		}
-	} else addAlert("<strong>Echec !</strong> "+callBack.error,0);
-}
-
-// Validation de personnes, avec le bouton dans la liste
-function validationPersonnes(){
-	var reponse;
-	var checkeds=$("input:checked");
-	checkeds.each(function(items){
-		var id=$(this).attr("idP");
-		var p=data.getPersonneById(id);
-		if ((p!=null)&&(p.SUG==1)) {
-			reponse=manager.validPersonne(p.ID);
-			if(reponse.state=="success") { data.validPersonne(p); }
-			else { addAlert("Échec lors de la validation de <i>"+p.PRENOM+" "+p.NOM+"</i>",0); }
-		}
-	});
-	affichage.liste();
-}
-
 //------------------------
 // Fusion
 //------------------------
@@ -782,7 +805,7 @@ function checkItemsDiff(){
 		var reponse=manager.modPersonne(mergeItem.resultat);
 		if (reponse.state=="success"){
 			data.modPersonne(personneAUpdater,mergeItem.resultat);
-			afficherFormulaireModificationPersonne(mergeItem.resultat.ID);
+			choixModifOuAffichage(mergeItem.resultat.ID);
 		} else {
 			flagErreur=true;
 		}
@@ -873,6 +896,66 @@ affichage.displayFilter=function(){
 	this.divFiltres.append(txtToAppend);
 }
 
+// Création de l'interface permettant de modifier une personne
+affichage.personne=function(id){
+	var container=$("#mainContent");
+	var context={};
+	var personne, nouvelEvenement;
+	var i;
+	
+	if (typeof id == 'object') {
+		if (id==null) {
+			personne=null;
+			id=-1;
+		} else {
+			personne=id;
+			id=personne.ID;
+		}
+	} else {
+		personne=data.getPersonneById(id);
+	}
+
+	if (personne!=null) {
+		//--- Création du contexte -------
+		context.ID=personne.ID;
+		context.NOM=personne.NOM;
+		context.PRENOM=personne.PRENOM;
+		context.VILLE=personne.VILLE;
+		context.HOBBY=personne.HOBBY;
+		context.DIVERS=personne.DIVERS;
+		context.affCommandes=true;
+		if (personne.PHOTO!='') { context.PHOTO=personne.PHOTO; }
+		context.REGION=data.getRegionById(personne.IDREGION).NOM;
+
+		context.evenements=[];
+		for (i=0;i<data.evenements.length;i++) {
+			nouvelEvenement={IDE:data.evenements[i].ID, NOM:data.evenements[i].NOM};
+			if (personne.liens.indexOf(data.evenements[i])>=0) { nouvelEvenement.actif=true; }
+			context.evenements.push(nouvelEvenement);
+		}
+
+		//--- Applcation du contexte au template handlebars -------
+		
+		var source   = $("#affichage-personne-template").html();
+		var template = Handlebars.compile(source);
+
+		container.empty();
+		container.append(template(context));
+
+		//--- Création des évènements  -------
+		$('#precButton').bind("click", function() { choixModifOuAffichage(data.getPrev(this.getAttribute("idP"),false)); });
+		$('#nextButton').bind("click", function() { choixModifOuAffichage(data.getNext(this.getAttribute("idP"))); });
+		$('#retourButton').bind("click", function() { affichage.setPageActive(this.getAttribute("idP")); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
+		$("a[name|='evenement']").bind("click",function(){
+			data.setFilter(true,{filtreE:this.getAttribute("idE")});
+			data.applyFilter(true);
+			affichage.setPageActive(this.getAttribute("idP"));
+			if (affichage.retourSurListe) { affichage.liste(); }
+			else {affichage.trombinoscope(); }
+		});
+	}
+}
+
 // Donne la liste des éléments à afficher en tenant compte du filtrage
 // Affiche les éléments de la liste
 affichage.liste=function(){
@@ -907,7 +990,7 @@ affichage.liste=function(){
 	}
 	
 	// Boutons
-	if (data.user.RANK>=7) {
+	if (RANK>=RANG_ADMIN) {
 		context.fusionButton=true;
 		context.validationButton=true;
 	}
@@ -918,6 +1001,7 @@ affichage.liste=function(){
 		itToAdd = {ID:it.ID, NOM:it.NOM, PRENOM:it.PRENOM, VILLE:it.VILLE, IDREGION:it.IDREGION, nomRegion:data.getRegionById(it.IDREGION).NOM};
 		if (it.PHOTO!='') { itToAdd.PHOTO=it.PHOTO; }
 		if (it.SUG==1) { itToAdd.SUG=1; }
+		if ((RANK>=RANG_ADMIN)||(it.SUG==1)) {it.writable=true; }
 		context.personnes.push(itToAdd);
 	}
 
@@ -931,7 +1015,7 @@ affichage.liste=function(){
 	
 	//--- Création des évènements  -------
 	
-	$("a[name|='edit']").bind("click",function(){ afficherFormulaireModificationPersonne(this.getAttribute('idP')); return false;});
+	$("a[name|='affEdit']").bind("click",function(){ choixModifOuAffichage(this.getAttribute('idP')); return false;});
 	$("a[name|='del']").bind("click",function(){ var id=this.getAttribute('idP'); if (delPersonne(id)) { $("#tr"+id).remove(); } return false;});
 	$("a[name|='region']").bind("click",function(){ var idR=this.getAttribute('idR'); data.setFilter(false,{filtreR:idR}); data.applyFilter(false); affichage.liste(); return false;});
 	$("#pagePrecedente").bind("click",function(){affichage.pageActiveListe--; affichage.liste(); return false;});
@@ -994,7 +1078,8 @@ affichage.trombinoscope=function(){
 	for (i=rangInitial;i<rangFinal;i++){
 		it=data.listeAAfficher[i];
 		nouvellePersonne={ID:it.ID, NOM:it.NOM, PRENOM:it.PRENOM};
-		if (it.PHOTO!="") nouvellePersonne.PHOTO=it.PHOTO;
+		if (it.PHOTO!="") { nouvellePersonne.PHOTO=it.PHOTO; }
+		if (it.SUG==1) { nouvellePersonne.SUG=1; }
 		nouvelleLigne.personnes.push(nouvellePersonne);
 		if (nouvelleLigne.personnes.length==this.photosParLigne) {
 			context.lignes.push(nouvelleLigne);
@@ -1015,7 +1100,7 @@ affichage.trombinoscope=function(){
 
 	//--- Création des évènements  -------
 	
-	$("a[name|='photo']").bind("click",function(){ afficherFormulaireModificationPersonne(this.getAttribute('idP')); return false;});
+	$("a[name|='photo']").bind("click",function(){ choixModifOuAffichage(this.getAttribute('idP')); return false;});
 	$("#pagePrecedente").bind("click",function(){affichage.pageActiveTrombi--; affichage.trombinoscope(); return false;});
 	$("#pageSuivante").bind("click",function(){affichage.pageActiveTrombi++; affichage.trombinoscope(); return false;});
 	$("a[name|='page']").bind("click",function(){ affichage.pageActiveTrombi=this.getAttribute('index'); affichage.trombinoscope(); return false;});
@@ -1191,7 +1276,7 @@ manager.delPersonne=function(id){
 
 // Modifie le compte dans la BDD
 manager.modMonCompte=function(newPwd){
-	return this.post('./php/modMonCompte.php',{pwd:MD5(graine+newPwd)});
+	return this.post('./php/modMonCompte.php',{pwd:MD5(PWD_SEED+newPwd)});
 }
 
 // Demande la liste des personnes avec photo

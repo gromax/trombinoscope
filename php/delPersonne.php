@@ -10,7 +10,7 @@
 	
 	// Pour supprimer une personne il faut être de rang 7
 	// Ou de rang 2 s'il s'agit d'une de ses propres suggestions
-	if ( ($id!=NULL) && ( ($_SESSION['RANKtrombi']>=7) || ( ($_SESSION['RANKtrombi']>=2) && isset($_SESSION['mySugs'][$id]) ) ) ){
+	if ( ($id!=NULL) && author("delPerson",array('ID'=>$id))){
 		require_once('./conx/connexion.php');
 
 		// Préparation des requêtes

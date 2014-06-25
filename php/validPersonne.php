@@ -7,7 +7,7 @@
 	if (!isset($_SESSION['IDtrombi'])) die('({state:"failed",error:"logOff"})');
 
 	// Avec le rang 7 on peut modifier n'importe qui
-	if ($_SESSION['RANKtrombi']>=7){
+	if (author("validNewPerson",null)){
 		if (isset($_POST['ID'])) {
 			$id=$_POST['ID'];
 			require_once('./conx/connexion.php');

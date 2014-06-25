@@ -6,7 +6,7 @@
 	if (!isset($_SESSION['IDtrombi'])) die('({state:"failed",error:"logOff"})');
 
 	// Il faut être de rang 2 ou plus
-	if ($_SESSION['RANKtrombi']>=2){
+	if (author("personsWidthPhoto",null)){
 		require_once('./conx/connexion.php');
 		$select = $connexion->prepare('SELECT ID, NOM, PRENOM, VILLE, DATE FROM '.$prefixeDB.'personnes WHERE SUG=0 AND PHOTO !="" ORDER BY NOM,PRENOM ASC;');
 		$jsonData='';

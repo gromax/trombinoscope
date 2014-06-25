@@ -89,7 +89,11 @@
 			<tr id='tr{{this.ID}}'>
 		{{/if}}
 		<td><input type='checkbox' idP={{this.ID}}></td>
-		<td><a href='#' name='edit-{{this.ID}}' idP={{this.ID}} ><span class='glyphicon glyphicon-pencil'></span></a></td>
+		{{#if this.writable}}
+			<td><a href='#' name='affEdit-{{this.ID}}' idP={{this.ID}} ><span class='glyphicon glyphicon-pencil'></span></a></td>
+		{{else}}
+			<td><a href='#' name='affEdit-{{this.ID}}' idP={{this.ID}} ><span class='glyphicon glyphicon-eye-open'></span></a></td>
+		{{/if}}
 		<td><a href='#' name='del-{{this.ID}}' idP={{this.ID}}><span class='glyphicon glyphicon-trash'></span></a></td>
 		<td>{{this.NOM}}</td>
 		<td>{{this.PRENOM}}</td>
@@ -139,26 +143,75 @@
 	</div>
 
 	
-	
+	<div class="table-responsive">
 	<table class='table-bordered table-striped'>
 		{{#each lignes}}
 			<tr>
 				{{#each this.personnes}}
 					{{#if this.PHOTO}}
-						<td><a href='#' class='thumbnail' name='photo-{{this.ID}}' idP={{this.ID}}><img src='./img/{{this.PHOTO}}.jpg' width='150' height='200'></a></td>
+						<td><a href='#' class='thumbnail' style='margin-bottom:0px;' name='photo-{{this.ID}}' idP={{this.ID}}><img src='./img/{{this.PHOTO}}.jpg' class='upImg'></a></td>
 					{{else}}
-						<td><a href='#' class='thumbnail' name='photo-{{this.ID}}' idP={{this.ID}}><img src='./img/inconnu.png' width='150' height='200'></a></td>
+						<td><a href='#' class='thumbnail' style='margin-bottom:0px;' name='photo-{{this.ID}}' idP={{this.ID}}><img src='./img/inconnu.png' class='upImg'></a></td>
 					{{/if}}
 				{{/each}}
 			</tr>
 			<tr>
 				{{#each this.personnes}}
-					<td class='tdTrombi'>{{this.PRENOM}}<br />{{this.NOM}}</td>
+					{{#if this.SUG}}
+						<td class='tdTrombi' style='background-color:#FFEEEE;'>{{this.PRENOM}}<br />{{this.NOM}}</td>
+					{{else}}
+						<td class='tdTrombi'>{{this.PRENOM}}<br />{{this.NOM}}</td>
+					{{/if}}
 				{{/each}}
 			</tr>			
 		{{/each}}
 	</table>
+	</div>
 </script>
+
+<!-- Affichage d'une personne -->
+<script id="affichage-personne-template" type="text/x-handlebars-template">
+	<!-- zone de photo -->
+	<div class='col-md-3 col-xs-3'>
+		{{#if PHOTO}}
+			<img id='photo' src='./img/{{PHOTO}}.jpg' class='upImg'>
+		{{else}}
+			<img id='photo' src='./img/inconnu.png' class='upImg'>
+		{{/if}}
+	</div>
+
+	<!-- zone d'infos -->
+	<div class='col-md-6 col-xs-6'>
+		{{#if affCommandes}}
+			<div class='btn-group'>
+				<button id='precButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
+				<button id='retourButton' type='button' idP={{ID}} class='btn btn-info btn-sm'>Retour <span class='glyphicon glyphicon-eject'></span></button>
+				<button id='nextButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
+			</div>
+		{{/if}}
+		<h3>{{PRENOM}} {{NOM}}</h3>
+		<dl class="dl-horizontal">
+		  <dt>Ville</dt><dd>{{VILLE}}</dd>
+		  <dt>Région</dt><dd>{{REGION}}</dd>
+		  <dt>Hobbys</dt><dd>{{HOBBY}}</dd>
+		</dl>
+	</div>
+	<!-- zone de participations -->
+	<div class='col-md-3 col-xs-3'>
+		{{#if evenements}}
+			<div class='list-group'>
+			{{#each evenements}}
+				{{#if this.actif}}
+					<a href='#' name='evenement-{{this.IDE}}' idP="{{../../../ID}}" idE={{this.IDE}} actif=1 class='list-group-item list-group-item-success'>{{this.NOM}}</a>
+				{{else}}
+					<a href='#' name='evenement-{{this.IDE}}' idP="{{../../../ID}}" idE={{this.IDE}} actif=0 class='list-group-item'>{{this.NOM}}</a>
+				{{/if}}
+			{{/each}}
+			</div>
+		{{/if}}
+	</div>
+</script>
+
 
 <!-- Formulaire de modification de personne -->
 <script id="modification-personne-template" type="text/x-handlebars-template">
@@ -166,15 +219,14 @@
 	<div class='col-md-3 col-xs-3'>
 		{{#if affPhoto}}
 			{{#if PHOTO}}
-				<img id='photo' src='./img/{{PHOTO}}.jpg' width='150' height='200'>
+				<img id='photo' src='./img/{{PHOTO}}.jpg' class='upImg'>
 			{{else}}
-				<img id='photo' src='./img/inconnu.png' width='150' height='200'>
+				<img id='photo' src='./img/inconnu.png' class='upImg'>
 			{{/if}}
 			<center><form method='POST' action='./php/upload.php' enctype='multipart/form-data' target='loadFrame'>
 				<input type='file' title='Modifier' class='btn-primary' onchange='javascript:submit();' name='avatar'>
-				<input type='hidden' name='MAX_FILE_SIZE' value='100000'>
-				
-				<input type='hidden' name='idPersonne' value='{{ID}}'>
+				<input type='hidden' name='MAX_FILE_SIZE' value='500000'>
+				<input type='hidden' name='IDP' value='{{ID}}'>
 			</form></center>
 			<iframe class='frameLoad' src='#' name='loadFrame' id='loadFrame'></iframe>
 		{{/if}}

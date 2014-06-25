@@ -8,7 +8,7 @@
 	
 	// Avec le rang 7 on ajoute une personne avec un statut normal (SUG=0)
 	// Avec le rang 2 on ajoute une personne avec le statut sugestion (SUG=1)
-	if ($_SESSION['RANKtrombi']>=2){
+	if (author("addNewPerson",null)){
 		// Il faut au minimum un nom et un prénom
 		if(isset($_POST['NOM']) && isset($_POST['PRENOM'])){
 			if (isset($_POST['VILLE'])) $ville=$_POST['VILLE']; else $ville='';
@@ -20,8 +20,8 @@
 			
 			require_once('./conx/connexion.php');
 
-			if ($_SESSION['RANKtrombi']>=7) $S=0;
-			else $S=1;
+			if (RANK>=RANG_ADMIN) { $S=0; }
+			else { $S=1; }
 			
 			// Préparation de la reqête
 			$addPersonnePrepa = $connexion->prepare('INSERT INTO '.$prefixeDB.'personnes (NOM, PRENOM, VILLE, HOBBY, IDREGION, VL, EP, SUG, DATE, HEURE, IP, DIVERS) VALUES (:nom, :prenom, :ville, :hobby, :idR, :vl , :ep , :sug , :date, :heure, :ip, :div)'); 

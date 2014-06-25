@@ -2,8 +2,13 @@
 p {margin:2px;}
 
 .tdTrombi{ /* élément du tableau trombinoscope */
-	width:170px;
+	width:160px;
 	text-align:center;
+}
+
+.upImg{
+	width: 100%;
+	height:auto;
 }
 
 .frameLoad{ /* frame pour le retour du file input */

@@ -10,7 +10,7 @@
 	// Avec le rang 2 on peut modifier une de ses suggestions
 	if (isset($_POST['ID'])) {
 		$id=$_POST['ID'];
-		if ( ($_SESSION['RANKtrombi']>=7) || ( ($_SESSION['RANKtrombi']>=2) && isset($_SESSION['mySugs'][$id]) ) ){
+		if (author("modPerson",array('ID'=>$id))){
 		
 			// Il faut au moins une vérification, sans quoi la modification est inutile
 			$requete='';

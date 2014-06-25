@@ -24,13 +24,13 @@
 	$scrE=");</script>";
 	include './authcheck.php';
 	if (!isset($_SESSION['IDtrombi'])) die($srcB.'({state:"failed",error:"logOff"})'.$scrE);
-	if ( ($_POST['idPersonne']) && ( ($_SESSION['RANKtrombi']>=7) || ( ($_SESSION['RANKtrombi']>=2) && ( isset($_SESSION['mySugs'][$_POST['idPersonne']])) ) ) ){
-		if(isset($_FILES['avatar'])){
+	if( isset($_POST['IDP']) && isset($_FILES['avatar']) )  {
+		$id=$_POST['IDP'];
+		if ( author("modPerson",array('ID'=>$id)) ){
 			require_once('./conx/connexion.php');
 			$selectPersonne = $connexion->prepare('SELECT PHOTO FROM '.$prefixeDB.'personnes WHERE ID=:id ;');
 			$updatePersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET PHOTO=:photo WHERE ID=:id ;');
 			
-			$id=$_POST['idPersonne'];
 			$extensions = array('.jpg','.jpeg');
 			$extension = strtolower(strrchr($_FILES['avatar']['name'], '.'));
 			$taille_maxi = 600000;
@@ -62,11 +62,12 @@
 					$updatePersonne->execute(array('photo'=>$strMD5, 'id'=>$id ));
 					die($scrB.'({state:"success",id:'.$id.',PHOTO:"'.$strMD5.'"})'.$scrE);
 				} else {
-					die($scrB.'({state:"failed",error:"upload failed"})'.$scrE);
+					die($scrB.'({state:"failed",error:"Échec du chargement"})'.$scrE);
 				}
 			}
 		}
-		die($scrB.'({state:"failed",error:"missing parameters"})'.$scrE);
+		die($scrB.'({state:"failed",error:"Vous n\'êtes pas autorisé à effectuer cette modification"})'.$scrE);
 	}
-	die($scrB.'({state:"failed",error:"your rank is too low"})'.$scrE);
+	die($scrB.'({state:"failed",error:"Paramètres manquants"})'.$scrE);
+
 ?>

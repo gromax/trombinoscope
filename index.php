@@ -16,12 +16,22 @@
 		<link media="screen" rel="stylesheet" href='./style.css' type="text/css"/>
 		<link href="./lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"><!-- Autocomplete-->
+		<script language='javascript' type='text/javascript'> <!-- Définition des constantes -->
+			var RANG_SUPER_ADMIN=<?php echo RANG_SUPER_ADMIN; ?>;
+			var RANG_ADMIN=<?php echo RANG_ADMIN; ?>;
+			var RANG_USER=<?php echo RANG_USER; ?>;
+			var RANG_VISITOR=<?php echo RANG_VISITOR; ?>;
+			var RANG_ANONYME_CONTRIBUTOR=<?php echo RANG_ANONYME_CONTRIBUTOR; ?>;
+			var PWD_SEED='<?php echo PWD_SEED; ?>';
+			var RANK=<?php echo $rank; ?>;
+		</script>
 		<script language='javascript' type='text/javascript' src='./js/moteur.js'></script>
 		<script src="./lib/jquery-1.9.1.min.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> <!-- Autocomplete-->
 		<script src="./lib/bootstrap/js/bootstrap.min.js"></script>
 		<script src="./lib/bootstrap.file-input.js"></script>
 		<script src="./lib/handlebars.js"></script>
+
 		
 <!-- Templates handlebars -->
 	<?php
@@ -30,7 +40,7 @@
 	
 	</head>
 	
-	<body onload="init('<?php echo PWD_SEED ?>', <?php echo $rank ?>)">
+	<body onload="init()">
 		<nav class="navbar navbar-default" role="navigation">			
 			<div class="container">
 				<div class="navbar-header">

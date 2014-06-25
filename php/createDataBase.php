@@ -30,6 +30,7 @@ $createPersonnesTable = $connexion->prepare("CREATE TABLE IF NOT EXISTS `".$pref
 	`HEURE` time NOT NULL,
 	`IP` varchar(20) NOT NULL,
 	`PHOTO` text NOT NULL,
+	`IDA` int(11) NOT NULL,
 	PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;");
 

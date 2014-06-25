@@ -2,7 +2,7 @@
 	include './authcheck.php';
 	if (!isset($_SESSION['IDtrombi'])) die('({state:"failed",error:"logOff"})');
 	
-	if ($_SESSION['RANKtrombi']>=7){
+	if (author("modEvent",null)){
 		if(isset($_POST['nom'])) {
 			require_once('./conx/connexion.php');
 			$id=$_POST['id'];
