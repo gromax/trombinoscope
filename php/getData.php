@@ -22,12 +22,18 @@
 				$wh=$wh.$id;
 			}
 		}
+
 		$visibles=array(); // Enregistre les personnes visibles
 		if ((RANK>=RANG_VISITOR) || ($wh!="")) {
 			if (RANK>=RANG_ADMIN) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes ORDER BY NOM, PRENOM ASC;');
 			elseif (RANK==RANG_USER) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) OR IDA='.$_SESSION['IDtrombi'].' ORDER BY NOM, PRENOM ASC;');
-			elseif (RANK==RANG_VISITOR) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) OR ID IN ('.$wh.') ORDER BY NOM, PRENOM ASC;');
-			else $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, PHOTO, DATE, HEURE, IDA  FROM '.$prefixeDB.'personnes WHERE ID IN ('.$wh.');');
+			elseif (RANK==RANG_VISITOR) {
+				if ($wh!="") {
+					$selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) OR ID IN ('.$wh.') ORDER BY NOM, PRENOM ASC;');
+				} else {
+					$selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) ORDER BY NOM, PRENOM ASC;');
+				}
+			} else $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, PHOTO, DATE, HEURE, IDA  FROM '.$prefixeDB.'personnes WHERE ID IN ('.$wh.');');
 			$selectPersonnes->execute();
 			$jsonData='';
 			while( $personne = $selectPersonnes->fetch(PDO::FETCH_ASSOC) ) {
@@ -62,7 +68,6 @@
 			$liens='liens:['.$jsonData.']';
 			$selectParticipations->closeCursor();
 		}
-		
 	}
 	die('({'.$user.','.$personnes.','.$evenements.','.$liens.'})');
 ?>

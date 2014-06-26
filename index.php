@@ -114,13 +114,13 @@
 <?php } elseif($rank>=RANG_ADMIN) { ?>
 
 					 <ul class="nav navbar-nav navbar-right">
-						<li><a href="#" onclick="modifMonCompteForm();">Mon compte</a></li>
+						<li><a href="#" onclick="modifMonCompteForm();"><span class="glyphicon glyphicon-user"></span></a></li>
 						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
 					</ul>
 
-<?php }	elseif($rank==RANG_ANONYME_CONTRIBUTOR) { ?>
+<?php }	elseif(($rank==RANG_ANONYME_CONTRIBUTOR)||($rank==RANG_VISITOR)) { ?>
 					<ul class="nav navbar-nav navbar-right">
-						<li><a href="#" onclick="deconnexion();">Logout</a></li>
+						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
 					</ul>
 <?php } ?>		
 				</div>
