@@ -24,6 +24,7 @@
 			var RANG_ANONYME_CONTRIBUTOR=<?php echo RANG_ANONYME_CONTRIBUTOR; ?>;
 			var PWD_SEED='<?php echo PWD_SEED; ?>';
 			var RANK=<?php echo $rank; ?>;
+			var ranks = [RANG_SUPER_ADMIN, RANG_ADMIN, RANG_USER, RANG_VISITOR, RANG_ANONYME_CONTRIBUTOR];
 		</script>
 		<script language='javascript' type='text/javascript' src='./js/moteur.js'></script>
 		<script src="./lib/jquery-1.9.1.min.js"></script>
@@ -77,6 +78,7 @@
 								<li><a href="#" onclick="afficherListeEvenements();">Liste</a></li>
 					  		</ul>
 						</li>
+						<li><a href="#" onclick="affichage.listeUsers(); return false;">Users</a></li>
 				  	</ul>
 					 <form class="navbar-form navbar-left" role="search" onsubmit="data.filtrerSelonRecherche($('#inpSearch').val()); affichage.setPageActive(null); affichage.liste(); return false;">
 						<div class="form-group">

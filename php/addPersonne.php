@@ -22,9 +22,12 @@
 
 			if (RANK>=RANG_ADMIN) { $S=0; }
 			else { $S=1; }
-			
+			if (RANK==RANG_USER) { $idA=$_SESSION['IDtrombi']; }
+			else { $idA=0; }
+
+
 			// Préparation de la reqête
-			$addPersonnePrepa = $connexion->prepare('INSERT INTO '.$prefixeDB.'personnes (NOM, PRENOM, VILLE, HOBBY, IDREGION, VL, EP, SUG, DATE, HEURE, IP, DIVERS) VALUES (:nom, :prenom, :ville, :hobby, :idR, :vl , :ep , :sug , :date, :heure, :ip, :div)'); 
+			$addPersonnePrepa = $connexion->prepare('INSERT INTO '.$prefixeDB.'personnes (NOM, PRENOM, VILLE, HOBBY, IDREGION, VL, EP, SUG, DATE, HEURE, IP, DIVERS, IDA) VALUES (:nom, :prenom, :ville, :hobby, :idR, :vl , :ep , :sug , :date, :heure, :ip, :div, :ida)'); 
 			
 			$params=array(
 				'nom'=>$_POST['NOM'],
@@ -38,8 +41,10 @@
 				'date'=>date('Y-m-d'),
 				'heure'=>date('H:i:s'),
 				'ip'=>$_SESSION['ipaddr'],
-				'sug'=>$S
+				'sug'=>$S,
+				'ida'=>$idA
 			);
+
 			
 			try {
 				$addPersonne = $addPersonnePrepa->execute($params);

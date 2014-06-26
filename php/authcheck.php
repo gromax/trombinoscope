@@ -46,6 +46,15 @@
 			case "personsWidthPhoto" :
 				if (RANK>0) return true;
 				break;
+			case "getUsersList" :
+				if (RANK>RANG_ADMIN) return true;
+				break;
+			case "addModUser" :
+				if (RANK>RANG_ADMIN) return true;
+				break;
+			case "delUser" :
+				if (RANK>RANG_ADMIN) return true;
+				break;
 		}
 		return false;
 	}

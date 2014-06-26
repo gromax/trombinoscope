@@ -10,6 +10,30 @@
 	</form>
 </script>
 
+<!-- ajout / modif d'un utilisateur -->
+<script id="addMod-users-template" type="text/x-handlebars-template">
+	{{#if this.addU}}
+		<h1 class='text-info'>Ajouter un compte</h1>
+	{{else}}
+		<h1 class='text-info'>Modifier un compte</h1>
+	{{/if}}
+	<form class='form-horizontal' role='form' id='addModUser'>
+		<div class='form-group'><label class='col-sm-2 control-label' for='inputPseudo'>Nom</label><div class='col-sm-6'><input type='text' class='form-control' id='inputPseudo' placeholder='Entrez un pseudo' value='{{PSEUDO}}'></div></div>
+		<div class='form-group'><label class='col-sm-2 control-label' for='pwd1'>Mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd1' placeholder='Mot de passe' value=''></div></div>
+		<div class='form-group'><label class='col-sm-2 control-label' for='pwd2'>Confirmation du mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd2' placeholder='Confirmez' value=''></div></div>
+		<div class='form-group'><label class='col-sm-2 control-label' for='selectRank'>Rang</label><div class='col-sm-8'><select class='form-control' id='selectRank'>
+			{{#each ranks}}
+				{{#if this.sel}}
+					<option value='{{this.RANK}}' selected>{{this.rankName}}</option>
+				{{else}}
+					<option value='{{this.RANK}}'>{{this.rankName}}</option>
+				{{/if}}
+			{{/each}}
+		</select></div></div>		
+		<div class='form-group'><div class='col-sm-offset-2 col-sm-4'><button type='submit' class='btn btn-primary btn-sm'>Valider</button></div></div>
+		<input id='userID' value={{this.ID}} type='hidden'>
+	</form>
+</script>
 
 <!-- Ajout / Modification d'évènement -->
 <script id="modAdd-event-template" type="text/x-handlebars-template">
@@ -321,6 +345,50 @@
 		<td>{{this.DATE}}</td>
 		</tr>
 	{{/each}}
+	</table>
+</script>
+
+<!-- Liste des utilisateurs -->
+<script id="liste-users-template" type="text/x-handlebars-template">
+	<h1 class='text-info'>Liste des utilisateurs</h1>
+	{{#if pages}}
+	<div>
+		<ul class='pagination'>
+			{{#each pages}}
+				{{#if this.active}}
+					<li class='active'><a href='#'>{{this.index}}<span class='sr-only'>(current)</span></a></li>
+				{{else}}
+					<li><a href='#' name='page-{{this.index}}' index={{this.index}}>{{this.index}}</a></li>
+				{{/if}}
+			{{/each}}
+		</ul>
+	</div>
+	{{/if}}
+
+	<table class='table table-bordered table-striped'>
+	<thead><tr>
+		<th width=16></th>
+		<th width=16><a href='#' name='addU'><span class='glyphicon glyphicon-plus'></span></a>
+		</th><th>PSEUDO</th><th>RANG</th>
+	</tr></thead>
+	<tbody>
+	{{#each users}}
+		<tr>
+		<td>
+		{{#if this.editable}}
+			<a href='#' name='edit-{{this.ID}}' idU={{this.ID}} ><span class='glyphicon glyphicon-pencil'></span></a>
+		{{/if}}
+		</td>
+		<td>
+		{{#if this.deletable}}
+			<a href='#' name='del-{{this.ID}}' idU={{this.ID}} ><span class='glyphicon glyphicon-trash'></span></a>
+		{{/if}}
+		</td>
+		<td>{{this.PSEUDO}}</td>
+		<td>{{this.rankName}}</td>
+		</tr>
+	{{/each}}
+	</tbody>
 	</table>
 </script>
 

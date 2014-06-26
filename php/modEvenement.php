@@ -1,4 +1,6 @@
 ﻿<?php
+	// modEvenement.php
+	// Ajout ou suppression d'un évènement
 	include './authcheck.php';
 	if (!isset($_SESSION['IDtrombi'])) die('({state:"failed",error:"logOff"})');
 	
@@ -12,19 +14,19 @@
 				$query=$connexion->prepare('UPDATE '.$prefixeDB.'evenements SET NOM=:nom WHERE ID=:id;');
 				try {
 					$query->execute(array('nom'=>$nom, 'id'=>$id));
-					$id=$connexion->lastInsertId();
 				} catch( Exception $e ){
-					die('({state:"failed",error:"mod personne : '.$e->getMessage().'"})');
+					die('({state:"failed",error:"mod event : '.$e->getMessage().'"})');
 				}
-				die ('({state:"success", insertedID:'.$id.'})');
+				die ('({state:"success"})');
 			} else {
 				$query=$connexion->prepare('INSERT INTO '.$prefixeDB.'evenements (NOM) VALUES (:nom);');
 				try {
-					$query->execute(array('nom'=>$nom, 'id'=>$id));
+					$query->execute(array('nom'=>$nom));
+					$id=$connexion->lastInsertId();
 				} catch( Exception $e ){
-					die('({state:"failed",error:"add personne : '.$e->getMessage().'"})');
+					die('({state:"failed",error:"add event : '.$e->getMessage().'"})');
 				}
-				die ('({state:"success"})');
+				die ('({state:"success", insertedID:'.$id.'})');
 			}
 		}
 		die('({state:"failed",error:"missing parameters"})');

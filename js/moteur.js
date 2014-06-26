@@ -23,9 +23,24 @@ function init(){
 	}
 }
 
+function rankName(rank){
+	if (rank==RANG_SUPER_ADMIN) { return "Super administrateur"; }
+	else {
+		if (rank==RANG_ADMIN) { return "Administrateur"; }
+		else {
+			if (rank==RANG_USER) { return "Utilisateur"; }
+			else {
+				if (rank==RANG_VISITOR) { return "Visiteur"; }
+			}
+		}
+	}
+	return "Contributeur anonyme";
+}
+
 //----------------------------
 // Interface
 //-----------------------------
+// Réponse à un click sur le bouton "Trombinoscope" de la bannière
 function trombinoscopeButtonClick(){
 	if (RANK>=RANG_VISITOR) {
 		affichage.setPageActive(null);
@@ -34,6 +49,101 @@ function trombinoscopeButtonClick(){
 			data.applyFilter(true);
 		}
 		affichage.trombinoscope();
+	}
+}
+
+// Demande de modification ou ajout d'un utilisateur
+function addModUser(id){
+	var i;
+	var user=null;
+	var context={ranks:[], ID:id};
+	if (id==data.user.ID) { modifMonCompteForm(); }
+	else {
+		if (id!=-1) { user=data.getUserById(id); }
+		else {context.addU=true; }
+
+		if (user==null) {
+			context.PSEUDO="";
+			context.RANK=RANG_ANONYME_CONTRIBUTOR;
+		} else {
+			context.PSEUDO=user.PSEUDO;
+			context.RANK=user.RANK;
+		}
+		for (i=0;i<ranks.length;i++){
+			if (ranks[i]<RANK) {
+				if (ranks[i]==context.RANK) { context.ranks.push({RANK:ranks[i], rankName:rankName(ranks[i]), sel:true}); }
+				else { context.ranks.push({RANK:ranks[i], rankName:rankName(ranks[i])}); }
+			}
+		}
+
+		container=$("#mainContent");
+		container.empty();
+		
+		var source   = $("#addMod-users-template").html();
+		var template = Handlebars.compile(source);
+		
+		container.append(template(context));
+		$("#addModUser").submit(function() { validAddModUser(); return false; });
+	}
+}
+
+function validAddModUser(){
+	var reponse;
+	var user;
+	var id=$('#userID').val();
+	var pseudo=$('#inputPseudo').val();
+	var rank=$('#selectRank').val();
+	var pwdInput1=$('#pwd1');
+	var pwdInput2=$('#pwd2');
+	if (pwdInput1.val()!=pwdInput2.val()) addAlert("Mots de passe différents.",0);
+	else {
+		pwd=pwdInput1.val();
+		pwdInput1.val('');
+		pwdInput2.val('');
+		reponse=manager.addModUser(pseudo, pwd, rank, id);
+		if (reponse.state=="success") {
+			if (id==-1) {
+				user={ID:reponse.insertedID, PSEUDO:pseudo, PWD:pwd, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
+				if (data.usersList!=null) { data.usersList.push(user); }
+				addAlert("Succès de la création.",1);
+			} else {
+				user=data.getUserById(id);
+				if (user!=null) {
+					user.PSEUDO=pseudo;
+					user.PWD=pwd;
+					user.RANK=rank;
+					user.rankName=rankName(rank);
+					addAlert("Succès de la modification.",1);
+				}
+			}
+			affichage.listeUsers();
+		} else {
+			if (id==-1) { addAlert("Échec de la création de l'utilisateur.", 0);}
+			else { addAlert("Échec de la modification de l'utilisateur.", 0);}
+		}
+
+	}
+}
+
+function delUser(id){
+	var reponse;
+	var index;
+	var user=data.getUserById(id);
+	if (user!=null){
+		if(confirm("Confirmez-vous la suppression de "+user.PSEUDO+" ?")) {
+			reponse=manager.delUser(id);
+			if (reponse.state=="success") {
+				if (data.usersList!=null) {
+					index=data.usersList.indexOf(user);
+					if (index>=0) { data.usersList.splice(index,1); }
+				}
+				addAlert("Succès de la suppression.",1);
+				affichage.listeUsers();
+			} else {
+				addAlert("Échec de la suppression.",1);
+			}
+
+		}
 	}
 }
 
@@ -241,6 +351,7 @@ function validerFormulaireModificationPersonne(id){
 	if (reponse.state=="success") {
 		if (id==-1) {
 			parametres.ID=reponse.insertedID;
+			if (RANK==RANG_USER) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
 			data.addPersonne(parametres);
 			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été ajouté(e).",1);
 		} else {
@@ -398,6 +509,7 @@ function doModMonCompte(){
 
 var data = {
 	user:null,	// ID, rang de l'utilisateur
+	usersList:null, // Liste des utilisateurs, pour les admins
 	personnes:[], // liste des personnes inscrites
 	evenements:[], // Liste des évènements
 	lastEventID:null, // ID du dernier évènement 
@@ -474,6 +586,18 @@ data.getPersonneById=function(idP){
 	for(i=0;i<this.personnes.length;i++) {
 		if (this.personnes[i].ID==idP) {
 			return this.personnes[i];
+		}
+	}
+	return null;
+}
+
+data.getUserById=function(idU){
+	var i;
+	if (this.usersList!=null) {
+		for(i=0;i<this.usersList.length;i++) {
+			if (this.usersList[i].ID==idU) {
+				return this.usersList[i];
+			}
 		}
 	}
 	return null;
@@ -871,7 +995,8 @@ var affichage = {
 	photosParPage:25, // Nombres de photos par page de trombinoscope
 	itemsParPage:50, // Nombres de personnes par ligne avec l'affichage tableau / Tous(null)
 	divFiltres:null, // div contenant les filtres
-	retourSurListe:true // Indique si le retour se fait sur liste ou sur trombi
+	retourSurListe:true, // Indique si le retour se fait sur liste ou sur trombi
+	usersPage:0 // Page courante de l'affichage des utilisateurs
 }
 
 // affichage d'éventuels filtres
@@ -1111,7 +1236,6 @@ affichage.trombinoscope=function(){
 // Fonction qui affiche simplement la liste de ceux dont on a déjà la photo
 affichage.personnesAvecPhoto=function(page){
 	page = typeof page !== 'undefined' ? page : 0;
-	var Npp=30; // Nombre de personnes par page
 	var i;
 	var container=$("#mainContent");
 	var context={};
@@ -1123,12 +1247,12 @@ affichage.personnesAvecPhoto=function(page){
 	if (data.pAP!=null) {
 		// Préparation du contexte
 		N=data.pAP.length;
-		if (page*Npp>N) { page=0; }
+		if (page*this.itemsParPage>N) { page=0; }
 		context.personnes=[];
-		for (i=page*Npp;i<Math.min(N,page*Npp+Npp);i++) { context.personnes.push(data.pAP[i]); }
-		if (Npp<N) {	// création de la pagination
+		for (i=page*this.itemsParPage;i<Math.min(N,(page+1)*this.itemsParPage);i++) { context.personnes.push(data.pAP[i]); }
+		if (this.itemsParPage<N) {	// création de la pagination
 			context.pages=[];
-			for (i=0;i<=Math.floor(N/Npp);i++) {
+			for (i=0;i<=Math.floor(N/this.itemsParPage);i++) {
 				nPage={index:i};
 				if (i==page) { nPage.active=true; }
 				context.pages.push(nPage);
@@ -1148,6 +1272,60 @@ affichage.personnesAvecPhoto=function(page){
 	}
 
 
+}
+
+// Fonction qui affiche simplement la liste de ceux dont on a déjà la photo
+affichage.listeUsers=function(page){
+	this.usersPage = typeof page !== 'undefined' ? page : this.usersPage;
+	var i;
+	var container=$("#mainContent");
+	var context={};
+	var N;
+	var nPage;
+	var reponse;
+	
+	// Acquisition de la liste des personnes ayant fourni leur photo
+	if (data.usersList==null) {
+		reponse=manager.getUsersList();
+		if (reponse.state=="success") {
+			data.usersList = reponse.liste;
+			for (i=0;i<data.usersList.length;i++) {
+				data.usersList[i].rankName = rankName(data.usersList[i].RANK);
+				if ((data.usersList[i].RANK<RANK) || (data.usersList[i].ID==data.user.ID)) { data.usersList[i].editable=true; }
+				if (data.usersList[i].RANK<RANK) { data.usersList[i].deletable=true; }
+			}
+		} else {
+			addAlert("La liste des utilisateurs n'a pas pu être récupérée.",0);
+		}
+	}
+	if (data.usersList!=null) {
+		// Préparation du contexte
+		N=data.usersList.length;
+		if (this.usersPage*this.itemsParPage>N) { this.usersPage=0; }
+		context.users=[];
+		for (i=this.usersPage*this.itemsParPage;i<Math.min(N,(this.usersPage+1)*this.itemsParPage);i++) { context.users.push(data.usersList[i]); }
+		if (this.itemsParPage<N) {	// création de la pagination
+			context.pages=[];
+			for (i=0;i<=Math.floor(N/this.itemsParPage);i++) {
+				nPage={index:i};
+				if (i==this.usersPage) { nPage.active=true; }
+				context.pages.push(nPage);
+			}
+		}
+		// Application du context au template handlebars
+		
+		var source   = $("#liste-users-template").html();
+		var template = Handlebars.compile(source);
+		container.empty();
+		container.append(template(context));
+		
+		// Création des évènements
+		$("a[name|='page']").bind("click",function(){ affichage.listeUsers(this.getAttribute('index')); return false;});
+		$("a[name|='edit']").bind("click",function(){ addModUser(this.getAttribute('idU')); return false;});
+		$("a[name|='del']").bind("click",function(){ delUser(this.getAttribute('idU')); return false;});
+		$("a[name='addU']").bind("click",function(){ addModUser(-1); return false;});
+
+	}
 }
 
 //----------------------
@@ -1244,6 +1422,11 @@ manager.get=function(url,parameters) {
 	} else return null;
 }
 
+// Récupère la liste des utilisateurs
+manager.getUsersList=function(){
+	return this.get('./php/getUsersList.php',null);
+}
+
 // Ajoute un lien entre personne et évènement en BDD
 manager.addLien=function(idp,ide){
 	return this.post('./php/addLien.php',{IDP:idp,IDE:ide});
@@ -1278,6 +1461,17 @@ manager.delPersonne=function(id){
 manager.modMonCompte=function(newPwd){
 	return this.post('./php/modMonCompte.php',{pwd:MD5(PWD_SEED+newPwd)});
 }
+
+// ajoute ou modifie un compte en BDD
+manager.addModUser=function(pseudo, pwd, rank, id){
+	return this.post('./php/addModUser.php',{pseudo:pseudo, pwd:MD5(PWD_SEED+pwd), rank:rank, id:id});
+}
+
+// Suppression utilisateur en BDD
+manager.delUser=function(id){
+	return this.post('./php/delUser.php',{id:id});
+}
+
 
 // Demande la liste des personnes avec photo
 manager.getListeAP=function(){
