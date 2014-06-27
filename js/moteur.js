@@ -8,7 +8,6 @@ function init(){
 	if (RANK>0){ // Cas connecté
 		data.load();
 		data.applyFilter(true);
-		affichage.divFiltres=$('#filtres');
 		if (RANK>=RANG_VISITOR) {
 			if (data.evenements.length>0) {
 				data.lastEventID=data.evenements[data.evenements.length-1].ID;
@@ -31,6 +30,9 @@ function rankName(rank){
 			if (rank==RANG_USER) { return "Utilisateur"; }
 			else {
 				if (rank==RANG_VISITOR) { return "Visiteur"; }
+				else {
+					if (rank==RANG_WAITING_USER) { return "Utilisateur en attente"; }
+				}
 			}
 		}
 	}
@@ -49,6 +51,15 @@ function trombinoscopeButtonClick(){
 			data.applyFilter(true);
 		}
 		affichage.trombinoscope();
+	} else {
+		if ((RANK==RANG_ANONYME_CONTRIBUTOR)||(RANK=RANG_WAITING_USER)) {
+			// Permet de voir ses propres photos
+			if (data.personnes.length>0) {
+				data.setFilter(true,null);
+				data.applyFilter(true);
+				affichage.trombinoscope();
+			}
+		}
 	}
 }
 
@@ -56,7 +67,7 @@ function trombinoscopeButtonClick(){
 function addModUser(id){
 	var i;
 	var user=null;
-	var context={ranks:[], ID:id};
+	var context={ID:id};
 	if (id==data.user.ID) { modifMonCompteForm(); }
 	else {
 		if (id!=-1) { user=data.getUserById(id); }
@@ -64,15 +75,20 @@ function addModUser(id){
 
 		if (user==null) {
 			context.PSEUDO="";
+			context.EMAIL="";
 			context.RANK=RANG_ANONYME_CONTRIBUTOR;
 		} else {
 			context.PSEUDO=user.PSEUDO;
 			context.RANK=user.RANK;
+			context.EMAIL=user.EMAIL;
 		}
-		for (i=0;i<ranks.length;i++){
-			if (ranks[i]<RANK) {
-				if (ranks[i]==context.RANK) { context.ranks.push({RANK:ranks[i], rankName:rankName(ranks[i]), sel:true}); }
-				else { context.ranks.push({RANK:ranks[i], rankName:rankName(ranks[i])}); }
+		if (RANK>=RANG_ADMIN) {
+			context.ranks=[];
+			for (i=0;i<ranks.length;i++){
+				if (ranks[i]<RANK) {
+					if (ranks[i]==context.RANK) { context.ranks.push({RANK:ranks[i], rankName:rankName(ranks[i]), sel:true}); }
+					else { context.ranks.push({RANK:ranks[i], rankName:rankName(ranks[i])}); }
+				}
 			}
 		}
 
@@ -87,36 +103,47 @@ function addModUser(id){
 	}
 }
 
+// Validation du formulaire précédent
 function validAddModUser(){
 	var reponse;
 	var user;
 	var id=$('#userID').val();
 	var pseudo=$('#inputPseudo').val();
-	var rank=$('#selectRank').val();
+	var email=$('#inputEmail').val();
 	var pwdInput1=$('#pwd1');
 	var pwdInput2=$('#pwd2');
+	var rank;
+
+	if (RANK>=RANG_ADMIN) {	rank=$('#selectRank').val(); }
+	else {rank=0;}
+
 	if (pwdInput1.val()!=pwdInput2.val()) addAlert("Mots de passe différents.",0);
 	else {
-		pwd=pwdInput1.val();
+		pwd=MD5(PWD_SEED+pwdInput1.val());
 		pwdInput1.val('');
 		pwdInput2.val('');
-		reponse=manager.addModUser(pseudo, pwd, rank, id);
+		reponse=manager.addModUser(pseudo, email, pwd, rank, id);
 		if (reponse.state=="success") {
 			if (id==-1) {
-				user={ID:reponse.insertedID, PSEUDO:pseudo, PWD:pwd, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
+				user={ID:reponse.insertedID, PSEUDO:pseudo, EMAIL:email, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
 				if (data.usersList!=null) { data.usersList.push(user); }
 				addAlert("Succès de la création.",1);
 			} else {
 				user=data.getUserById(id);
 				if (user!=null) {
 					user.PSEUDO=pseudo;
-					user.PWD=pwd;
+					user.EMAIL=email;
 					user.RANK=rank;
 					user.rankName=rankName(rank);
 					addAlert("Succès de la modification.",1);
 				}
 			}
-			affichage.listeUsers();
+			if (RANK>=RANG_ADMIN) { affichage.listeUsers(); }
+			else {
+				// On provoque la reconnexion avec  le nouvel utilisateur
+				manager.post('./php/login.php',{pwd:pwd,login:pseudo});
+				location.reload();
+			}
 		} else {
 			if (id==-1) { addAlert("Échec de la création de l'utilisateur.", 0);}
 			else { addAlert("Échec de la modification de l'utilisateur.", 0);}
@@ -125,6 +152,7 @@ function validAddModUser(){
 	}
 }
 
+// Réponse à une pression sur un bouton d'effacement utilisateur
 function delUser(id){
 	var reponse;
 	var index;
@@ -147,6 +175,28 @@ function delUser(id){
 	}
 }
 
+// Réponse au bouton de suppression d'un filtre
+function delFilter(f) {
+	var filter;
+	switch(f) {
+		case 'R' : filter={filtreR:null}; break;
+		case 'S' : filter={filtreS:null}; break;
+		case 'E' : filter={filtreE:null}; break;
+		case 'V' : filter={filtreV:null}; break;
+		case 'P' : filter={filtreP:null}; break;
+		case 'Se' : filter={activeSearch:false}; break;
+		case 'MC' : filter={filtreMyContribs:null}; break;
+		default : filter={};
+	}
+
+	$("span[name='bf-"+f+"']").remove();
+	data.setFilter(false,filter);
+	data.applyFilter(true);
+	switch(affichage.actif) {
+		case "liste" : affichage.liste(); break;
+		case "trombinoscope" : affichage.trombinoscope(); break;
+	}
+}
 
 //--------------------------------
 // Interface liée aux évènements
@@ -158,6 +208,8 @@ function afficherFormModificationEvenement(ev){
 	var container;
 	var context;
 	
+	affichage.actif="";
+
 	if (typeof ev == 'object') {
 		if (ev==null) {
 			id=-1;
@@ -208,6 +260,9 @@ function doAddModEvenement(id){
 // Affichage de la liste des évènements
 function afficherListeEvenements(){
 	var container=$("#mainContent");
+
+	affichage.actif="";
+
 	container.empty();
 
 	var source   = $("#liste-event-template").html();
@@ -221,7 +276,6 @@ function afficherListeEvenements(){
 		$("a[name|='edit']").bind("click",function(){afficherFormModificationEvenement(this.getAttribute("idE")); return false; });
 	}
 	$("a[name|='trombi']").bind("click",function(){data.setFilter(true,{filtreE:this.getAttribute("idE")}); data.applyFilter(true); affichage.setPageActive(null); affichage.trombinoscope(); return false;});
-
 }
 
 //------------------------------
@@ -245,7 +299,7 @@ function choixModifOuAffichage(id){
 
 	if (personne==null) { afficherFormulaireModificationPersonne(null); }
 	else {
-		if ((RANK>RANG_ADMIN)||(personne.SUG==1)) {
+		if ((RANK>RANG_ADMIN)||(personne.SUG==1)||(personne.IDA==data.user.ID)) {
 			afficherFormulaireModificationPersonne(personne);
 		} else {
 			affichage.personne(personne);
@@ -260,6 +314,8 @@ function afficherFormulaireModificationPersonne(id){
 	var personne, nouvelleRegion, nouvelEvenement;
 	var i;
 	
+	affichage.actif="modification personne";
+
 	if (typeof id == 'object') {
 		if (id==null) {
 			personne=null;
@@ -315,6 +371,7 @@ function afficherFormulaireModificationPersonne(id){
 	var template = Handlebars.compile(source);
 
 	container.empty();
+	affichage.displayFilter(container);
 	container.append(template(context));
 	
 	//--- Création des évènements  -------
@@ -351,7 +408,7 @@ function validerFormulaireModificationPersonne(id){
 	if (reponse.state=="success") {
 		if (id==-1) {
 			parametres.ID=reponse.insertedID;
-			if (RANK==RANG_USER) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
+			if ((RANK==RANG_USER)||(RANK=RANG_WAITING_USER)) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
 			data.addPersonne(parametres);
 			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été ajouté(e).",1);
 		} else {
@@ -480,13 +537,16 @@ function modifMonCompteForm(){
 	container.empty();
 	var source   = $("#mod-monCompte-template").html();
 	var template = Handlebars.compile(source);
-	container.append(template());
+	affichage.actif="";
+	var context={PSEUDO:data.user.PSEUDO, EMAIL:data.user.EMAIL};
+	container.append(template(context));
 	$('#modMonCompte').submit(function(){ doModMonCompte(); return false; });
 }
 
 function doModMonCompte(){
 	var reponse;
 	var pwd;
+	var email=$('#inputEmail').val();
 	var pwdInput1=$('#pwd1');
 	var pwdInput2=$('#pwd2');
 	if (pwdInput1.val()!=pwdInput2.val()) addAlert("Mots de passe différents.",0);
@@ -494,11 +554,12 @@ function doModMonCompte(){
 		pwd=pwdInput1.val();
 		pwdInput1.val('');
 		pwdInput2.val('');
-		reponse=manager.modMonCompte(pwd);
+		reponse=manager.modMonCompte(pwd,email);
 		if (reponse.state=="success") {
-			addAlert("Votre mot de passe a bien été modifié.",1);
+			addAlert("Les modifications ont été effectuées.",1);
+			data.user.EMAIL=email;
 		} else {
-			addAlert("Votre mot de passe n'a pas été modifié.",0);
+			addAlert("Les modifications ont échoué.",0);
 		}
 	}
 }
@@ -533,6 +594,7 @@ var data = {
 		{ID:16, NOM:"Rhônes Alpes"},
 		{ID:17, NOM:"Etranger"}
 	],
+	filtreMyContribs:null, // Affiche seulement mes contributions
 	filtreS:null, // Affiche seulement les éléments dont le statut suggestion est 0/1/Tous(null)
 	filtreP:null, // Affiche seulement les éléments qui ont une photo 0/1/Tous(null)
 	filtreV:null, // Affiche seulement les éléments qui souhaitent être visibles en ligne 0/1/Tous(null)
@@ -745,7 +807,6 @@ data.filtrerSelonRecherche=function(str){
 		this.setFilter(true,null);
 		this.activeSearch=true;
 		this.strSearch=str;
-		affichage.displayFilter();
 		str=majSansAccent(str);
 		this.listeAAfficher.length=0;
 		for(i=0;i<this.personnes.length;i++){
@@ -764,6 +825,7 @@ data.setFilter=function(restoreDefault,parametres){
 		this.filtreV=null;
 		this.filtreR=null;
 		this.filtreE=null;
+		this.filtreMyContribs=null;
 		this.activeSearch=false;
 	}
 	if (parametres!=null){
@@ -778,8 +840,6 @@ data.setFilter=function(restoreDefault,parametres){
 			else { this.strFiltreRegion=''; }
 		}
 	}
-
-	affichage.displayFilter();
 }
 
 // Effectue un filtrage en fonction du filtre actif
@@ -801,6 +861,7 @@ data.applyFilter=function(restoreListe){
 		it=this.listeAAfficher[i];
 		hasPhoto=(it.PHOTO!='');
 		if (	((this.filtreS!=null) && (this.filtreS!=it.SUG)) ||
+				((this.filtreMyContribs!=null) && (data.user.ID!=it.IDA)) ||
 				((this.filtreP!=null) && (this.filtreP!=hasPhoto)) ||
 				((this.filtreV!=null) && (this.filtreV!=it.VL)) ||
 				((this.filtreR!=null) && (this.filtreR!=it.IDREGION)) ||
@@ -942,6 +1003,8 @@ function askForGoodAttribute(attr){
 	var container=$("#mainContent");
 	var context={items:[]};
 	var i;
+
+	affichage.actif="";
 	
 	mergeItem.currentAttribute=attr;
 	
@@ -989,6 +1052,7 @@ mergeItem.selectAttribute=function(val){
 //----------------------------------
 // Objet contenant les fonctions d'affichage des listes de nom et des trombinoscopes
 var affichage = {
+	actif:"", // Indique quel type d'affichage est en cours
 	pageActiveTrombi:0, // Numéro de page courante si nécessaire
 	pageActiveListe:0,
 	photosParLigne:5, // Nombres de photos sur une ligne de trombinoscope
@@ -1000,25 +1064,30 @@ var affichage = {
 }
 
 // affichage d'éventuels filtres
-affichage.displayFilter=function(){
+affichage.displayFilter=function(container){
 	var txtToAppend="";
+	var context={items:[]};
 	
-	this.divFiltres.empty();
-	if ((data.filtreS!=null)||(data.filtreP!=null)||(data.filtreV!=null)||(data.filtreR!=null)||(data.filtreE!=null)||(data.activeSearch)){
+	if ((data.filtreS!=null)||(data.filtreMyContribs!=null)||(data.filtreP!=null)||(data.filtreV!=null)||(data.filtreR!=null)||(data.filtreE!=null)||(data.activeSearch)){
 		txtToAppend+="<span class='glyphicon glyphicon-filter'></span>";
-		if (data.filtreS==1) {	txtToAppend+="<span class='label label-warning'>Non validés</span>"; }
-		else { if(data.filtreS==0) { txtToAppend+="<span class='label label-success'>Validés</span>"; }}
-		if (data.filtreP==0) {	txtToAppend+="<span class='label label-warning'>Pas de photo</span>"; }
-		else { if(data.filtreP==1) { txtToAppend+="<span class='label label-success'>Photo présente</span>"; }}
-		if (data.filtreV==0) {	txtToAppend+="<span class='label label-warning'>Invisible en ligne</span>"; }
-		else { if(data.filtreV==1) { txtToAppend+="<span class='label label-success'>Visible en ligne</span>"; }}
+		if (data.filtreS==1) {	context.items.push({className:'label-warning', text:'Non validés', f:'S'}); }
+		else { if(data.filtreS==0) { context.items.push({className:'label-success', text:'Validés', f:'S'}); } }
+		if (data.filtreP==0) {	context.items.push({className:'label-warning', text:'Pas de photo', f:'P'}); }
+		else { if(data.filtreP==1) { context.items.push({className:'label-success', text:'Photo présente', f:'P'}); }}
+		if (data.filtreV==0) {	context.items.push({className:'label-warning', text:'Invisible en ligne', f:'V'}); }
+		else { if(data.filtreV==1) { context.items.push({className:'label-success', text:'Visible en ligne', f:'V'}); }}
 		
-		if (data.filtreR!=null) { txtToAppend+="<span class='label label-info'>"+data.strFiltreRegion+"</span>"; }
-		if ((data.filtreE!=null)&&(data.filtreEvent!=null)) {txtToAppend+="<span class='label label-info'>"+data.filtreEvent.NOM+"</span>"; }
+		if (data.filtreMyContribs) { context.items.push({className:'label-info', text:'Mes photos', f:'MC'}); }
+		if (data.filtreR!=null) { context.items.push({className:'label-info', text:data.strFiltreRegion, f:'R'}); }
+		if ((data.filtreE!=null)&&(data.filtreEvent!=null)) {context.items.push({className:'label-info', text:data.filtreEvent.NOM, f:'E'}); }
 		
-		if (data.activeSearch) { txtToAppend+="<span class='label label-info'><span class='glyphicon glyphicon-search'></span> "+data.strSearch+"</span>"; }
+		if (data.activeSearch) { context.items.push({className:'label-success', text:"Recherche : "+data.strSearch, f:'Se'}); }
 	}
-	this.divFiltres.append(txtToAppend);
+
+	var source=$("#filtres-template").html();
+	var template = Handlebars.compile(source);
+	container.append(template(context));
+	$("a[name='filtre']").bind("click",function(){ delFilter(this.getAttribute('f')); return false; });
 }
 
 // Création de l'interface permettant de modifier une personne
@@ -1028,6 +1097,8 @@ affichage.personne=function(id){
 	var personne, nouvelEvenement;
 	var i;
 	
+	this.actif="affichage personne";
+
 	if (typeof id == 'object') {
 		if (id==null) {
 			personne=null;
@@ -1065,6 +1136,7 @@ affichage.personne=function(id){
 		var template = Handlebars.compile(source);
 
 		container.empty();
+		affichage.displayFilter(container);
 		container.append(template(context));
 
 		//--- Création des évènements  -------
@@ -1089,6 +1161,8 @@ affichage.liste=function(){
 	var it;
 	var context={};
 	var itToAdd, nouvellePage;
+
+	this.actif="liste";
 
 	this.retourSurListe=true; 
 
@@ -1126,7 +1200,7 @@ affichage.liste=function(){
 		itToAdd = {ID:it.ID, NOM:it.NOM, PRENOM:it.PRENOM, VILLE:it.VILLE, IDREGION:it.IDREGION, nomRegion:data.getRegionById(it.IDREGION).NOM};
 		if (it.PHOTO!='') { itToAdd.PHOTO=it.PHOTO; }
 		if (it.SUG==1) { itToAdd.SUG=1; }
-		if ((RANK>=RANG_ADMIN)||(it.SUG==1)) {it.writable=true; }
+		if ((RANK>=RANG_ADMIN)||(it.SUG==1)||(it.IDA==data.user.ID)) { itToAdd.writable=true; }
 		context.personnes.push(itToAdd);
 	}
 
@@ -1136,6 +1210,7 @@ affichage.liste=function(){
 	var template = Handlebars.compile(source);
 
 	container.empty();
+	affichage.displayFilter(container);
 	container.append(template(context));
 	
 	//--- Création des évènements  -------
@@ -1173,6 +1248,8 @@ affichage.trombinoscope=function(){
 	var it, nouvellePage, nouvelleLigne, nouvellePersonne;
 	var i, Npage;
 	var context={};
+
+	this.actif="trombinoscope";
 
 	this.retourSurListe=false;
 	
@@ -1221,6 +1298,7 @@ affichage.trombinoscope=function(){
 	var template = Handlebars.compile(source);
 
 	container.empty();
+	affichage.displayFilter(container);
 	container.append(template(context));
 
 	//--- Création des évènements  -------
@@ -1242,6 +1320,8 @@ affichage.personnesAvecPhoto=function(page){
 	var N;
 	var nPage;
 	
+	this.actif="";
+
 	// Acquisition de la liste des personnes ayant fourni leur photo
 	manager.getListeAP();
 	if (data.pAP!=null) {
@@ -1270,8 +1350,6 @@ affichage.personnesAvecPhoto=function(page){
 		$("a[name|='page']").bind("click",function(){ affichage.personnesAvecPhoto(this.getAttribute('index')); return false;});
 
 	}
-
-
 }
 
 // Fonction qui affiche simplement la liste de ceux dont on a déjà la photo
@@ -1284,6 +1362,8 @@ affichage.listeUsers=function(page){
 	var nPage;
 	var reponse;
 	
+	this.actif="";
+
 	// Acquisition de la liste des personnes ayant fourni leur photo
 	if (data.usersList==null) {
 		reponse=manager.getUsersList();
@@ -1293,6 +1373,7 @@ affichage.listeUsers=function(page){
 				data.usersList[i].rankName = rankName(data.usersList[i].RANK);
 				if ((data.usersList[i].RANK<RANK) || (data.usersList[i].ID==data.user.ID)) { data.usersList[i].editable=true; }
 				if (data.usersList[i].RANK<RANK) { data.usersList[i].deletable=true; }
+				data.usersList[i].shortDate=shortDateFormat(data.usersList[i].DATE);
 			}
 		} else {
 			addAlert("La liste des utilisateurs n'a pas pu être récupérée.",0);
@@ -1458,13 +1539,15 @@ manager.delPersonne=function(id){
 }
 
 // Modifie le compte dans la BDD
-manager.modMonCompte=function(newPwd){
-	return this.post('./php/modMonCompte.php',{pwd:MD5(PWD_SEED+newPwd)});
+manager.modMonCompte=function(newPwd,email){
+	return this.post('./php/modMonCompte.php',{pwd:MD5(PWD_SEED+newPwd),email:email});
 }
 
 // ajoute ou modifie un compte en BDD
-manager.addModUser=function(pseudo, pwd, rank, id){
-	return this.post('./php/addModUser.php',{pseudo:pseudo, pwd:MD5(PWD_SEED+pwd), rank:rank, id:id});
+manager.addModUser=function(pseudo, email, pwd, rank, id){
+	var params={pseudo:pseudo, email:email, pwd:pwd, id:id};
+	if (rank!=0) { params.rank=rank; }
+	return this.post('./php/addModUser.php',params);
 }
 
 // Suppression utilisateur en BDD

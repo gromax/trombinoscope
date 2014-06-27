@@ -3,8 +3,10 @@
 	else include './php/config.php';
 	session_start();
 
-	if(!isset($_SESSION['last_access']) || !isset($_SESSION['ipaddr']) || !isset($_SESSION['IDtrombi'])) $session_on=false;
-	elseif ((time()-$_SESSION['last_access']>TIME_OUT) || ($_SERVER['REMOTE_ADDR']!=$_SESSION['ipaddr'])||isset($_GET['deco'])) {
+	if(!isset($_SESSION['last_access']) || !isset($_SESSION['ipaddr']) || !isset($_SESSION['IDtrombi'])) {
+		$session_on=false;
+		define("RANK",0);
+	} elseif ((time()-$_SESSION['last_access']>TIME_OUT) || ($_SERVER['REMOTE_ADDR']!=$_SESSION['ipaddr'])||isset($_GET['deco'])) {
 		if(file_exists('./logout.php')) include './logout.php';
 		else include './php/logout.php';
 		define("RANK",0);
@@ -26,34 +28,34 @@
 				if (RANK>=RANG_ADMIN) return true;
 				break;
 			case "addLink" :
-				if ( (RANK>=RANG_ADMIN) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['IDP']) && isset($mySugs[$params['IDP']]) ) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['IDP']) && isset($mySugs[$params['IDP']]) ) ) return true;
 				break;
 			case "removeLink" :
-				if ( (RANK>=RANG_ADMIN) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['IDP']) && isset($mySugs[$params['IDP']]) ) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['IDP']) && isset($mySugs[$params['IDP']]) ) ) return true;
 				break;
 			case "addNewPerson" :
-				if ((RANK>=RANG_ADMIN)||(RANK==RANG_ANONYME_CONTRIBUTOR)) return true;
+				if ((RANK>=RANG_ADMIN)||(RANK==RANG_ANONYME_CONTRIBUTOR) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
 				break;
 			case "delPerson" :
-				if ( (RANK>=RANG_ADMIN) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['ID']) && isset($mySugs[$params['ID']]) ) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['ID']) && isset($mySugs[$params['ID']]) ) ) return true;
 				break;
 			case "modPerson" :
-				if ( (RANK>=RANG_ADMIN) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['ID']) && isset($mySugs[$params['ID']]) ) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) || ( (RANK==RANG_ANONYME_CONTRIBUTOR) && isset($params['ID']) && isset($mySugs[$params['ID']]) ) ) return true;
 				break;
 			case "modMyAccount" :
-				if ((RANK>=RANG_ADMIN)||(RANK==RANG_USER)) return true;
+				if ((RANK>=RANG_ADMIN)||(RANK==RANG_USER) || (RANK==RANG_WAITING_USER)) return true;
 				break;
 			case "personsWidthPhoto" :
 				if (RANK>0) return true;
 				break;
 			case "getUsersList" :
-				if (RANK>RANG_ADMIN) return true;
+				if (RANK>=RANG_ADMIN) return true;
 				break;
 			case "addModUser" :
-				if (RANK>RANG_ADMIN) return true;
+				if ((RANK>=RANG_ADMIN)||( ((RANK==RANG_ANONYME_CONTRIBUTOR) || (RANK==RANG_VISITOR)) && isset($params['ID']) && ($params['ID']==-1) ) ) return true;
 				break;
 			case "delUser" :
-				if (RANK>RANG_ADMIN) return true;
+				if (RANK>=RANG_ADMIN) return true;
 				break;
 		}
 		return false;

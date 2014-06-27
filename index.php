@@ -1,10 +1,5 @@
 ﻿<?php
 	include './php/authcheck.php';
-	if(isset($_SESSION['RANKtrombi'])) {
-		$rank=$_SESSION['RANKtrombi'];
-	} else {
-		$rank=0;
-	}
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <?php echo '<?xml version="1.0"?>'; ?>
@@ -16,15 +11,16 @@
 		<link media="screen" rel="stylesheet" href='./style.css' type="text/css"/>
 		<link href="./lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"><!-- Autocomplete-->
-		<script language='javascript' type='text/javascript'> <!-- Définition des constantes -->
+		<script language='javascript' type='text/javascript'> //Définition des constantes
 			var RANG_SUPER_ADMIN=<?php echo RANG_SUPER_ADMIN; ?>;
 			var RANG_ADMIN=<?php echo RANG_ADMIN; ?>;
 			var RANG_USER=<?php echo RANG_USER; ?>;
 			var RANG_VISITOR=<?php echo RANG_VISITOR; ?>;
 			var RANG_ANONYME_CONTRIBUTOR=<?php echo RANG_ANONYME_CONTRIBUTOR; ?>;
+			var RANG_WAITING_USER=<?php echo RANG_WAITING_USER; ?>;
 			var PWD_SEED='<?php echo PWD_SEED; ?>';
-			var RANK=<?php echo $rank; ?>;
-			var ranks = [RANG_SUPER_ADMIN, RANG_ADMIN, RANG_USER, RANG_VISITOR, RANG_ANONYME_CONTRIBUTOR];
+			var RANK=<?php echo RANK ?>;
+			var ranks = [RANG_SUPER_ADMIN, RANG_ADMIN, RANG_USER, RANG_VISITOR, RANG_WAITING_USER, RANG_ANONYME_CONTRIBUTOR];
 		</script>
 		<script language='javascript' type='text/javascript' src='./js/moteur.js'></script>
 		<script src="./lib/jquery-1.9.1.min.js"></script>
@@ -35,13 +31,10 @@
 
 		
 <!-- Templates handlebars -->
-	<?php
-		if (isset($_SESSION['RANKtrombi'])) { include "./templates.php"; }
-	?>
-	
+	<?php include "./templates.php"; ?>
 	</head>
 	
-	<body onload="init()">
+	<body onload="init();">
 		<nav class="navbar navbar-default" role="navigation">			
 			<div class="container">
 				<div class="navbar-header">
@@ -56,9 +49,8 @@
 				<div class="collapse navbar-collapse">
 
 				<!-- Menu zone de gauche -->
-<?php if ($rank>0) { 
-	if ($rank>RANG_ADMIN) { ?>
-
+<?php if (RANK>0) { 
+	if (RANK>=RANG_ADMIN) { ?>
 					<ul class="nav navbar-nav">
 						<li class="dropdown">
 					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Personnes<b class="caret"></b></a>
@@ -86,21 +78,23 @@
 						</div>
 						<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
 					 </form>
-
-<?php	} elseif ($rank==RANG_ANONYME_CONTRIBUTOR) { ?>
-	
+<?php	} elseif (RANK==RANG_ANONYME_CONTRIBUTOR) { ?>
 					<ul class="nav navbar-nav">
 						<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
 						<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Mes ajouts</a></li>
-						<li><a href="#" onclick="affichage.personnesAvecPhoto();">Personnes dont nous avons déjà une photo</a></li>
+						<!--<li><a href="#" onclick="affichage.personnesAvecPhoto();">Personnes dont nous avons déjà une photo</a></li>-->
 					</ul>
-
+<?php } elseif ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
+					<ul class="nav navbar-nav">
+						<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
+						<li><a href="#" onclick="data.setFilter(true,{filtreMyContribs:true}); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Mes photos</a></li>
+						<!--<li><a href="#" onclick="affichage.personnesAvecPhoto();">Personnes dont nous avons déjà une photo</a></li>-->
+					</ul>
 <?php } } ?>
 
 				<!-- Menu zone de droite -->
 
-<?php if($rank==0) { ?>
-
+<?php if(RANK==0) { ?>
 					<form role="form" class="navbar-form navbar-right" onsubmit="doValidConx();">
 						<div class="form-group">
 							<input type="text" class="form-control" id="loginInput" placeholder="Identifiant">
@@ -110,16 +104,14 @@
 						</div>
 						<button class="btn btn-success" type="submit">Valider</button>
 					</form>
-
-<?php } elseif($rank>=RANG_ADMIN) { ?>
-
+<?php } elseif((RANK>=RANG_ADMIN)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
 					 <ul class="nav navbar-nav navbar-right">
 						<li><a href="#" onclick="modifMonCompteForm();"><span class="glyphicon glyphicon-user"></span></a></li>
 						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
 					</ul>
-
-<?php }	elseif(($rank==RANG_ANONYME_CONTRIBUTOR)||($rank==RANG_VISITOR)) { ?>
+<?php }	elseif((RANK==RANG_ANONYME_CONTRIBUTOR)||(RANK==RANG_VISITOR)) { ?>
 					<ul class="nav navbar-nav navbar-right">
+						<li><a href="#" onclick="addModUser(-1);">Créer un compte</a></li>
 						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
 					</ul>
 <?php } ?>		
@@ -128,11 +120,10 @@
 		</nav>
 
 		<div class="container">
-			<div id="filtres"></div>
 			<div class="row">
 				<div id="mainContent" class="col-md-10 col-md-offset-1 col-xs-12">
 
-<?php if ($rank==0) { ?>
+<?php if (RANK==0) { ?>
 
 					<h4>Qu'est ce que c'est ?</h4>
 					C'est un outil permettant de générer un trombinoscope sous format papier et, si vous êtes nombreux à le demander, en ligne. Ce trombinoscope est destiné à Lud'Été 2014, mais rien n'empêche qu'il serve à d'autres évènements.

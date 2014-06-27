@@ -4,6 +4,7 @@
 	unset($_SESSION['ipaddr']);
 	unset($_SESSION['IDtrombi']);
 	unset($_SESSION['PSEUDOtrombi']);
+	unset($_SESSION['EMAILtrombi']);
 	unset($_SESSION['RANKtrombi']);
 	unset($_SESSION['mySugs']);
 ?>

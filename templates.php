@@ -2,8 +2,10 @@
 
 <!-- modification de mon compte -->
 <script id="mod-monCompte-template" type="text/x-handlebars-template">
-	<h1 class='text-info'>Modifier mon compte</h1>
+	<h1 class='text-info'>Modifier mon compte : {{PSEUDO}}</h1>
+	<p><i>Laissez le mot de passe vide pour ne pas le changer</i></p>
 	<form class='form-horizontal' role='form' id='modMonCompte'>
+		<div class='form-group'><label class='col-sm-2 control-label' for='inputEmail'>Email</label><div class='col-sm-6'><input type='text' class='form-control' id='inputEmail' placeholder='Entrez un email' value='{{EMAIL}}'></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd1'>Nouveau mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd1' placeholder='Mot de passe' value=''></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd2'>Confirmation du mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd2' placeholder='Confirmez' value=''></div></div>
 		<div class='form-group'><div class='col-sm-offset-2 col-sm-4'><button type='submit' class='btn btn-primary btn-sm'>Valider</button></div></div>
@@ -16,20 +18,24 @@
 		<h1 class='text-info'>Ajouter un compte</h1>
 	{{else}}
 		<h1 class='text-info'>Modifier un compte</h1>
+		<p><i>Laissez le mot de passe vide pour ne pas le changer</i></p>
 	{{/if}}
 	<form class='form-horizontal' role='form' id='addModUser'>
 		<div class='form-group'><label class='col-sm-2 control-label' for='inputPseudo'>Nom</label><div class='col-sm-6'><input type='text' class='form-control' id='inputPseudo' placeholder='Entrez un pseudo' value='{{PSEUDO}}'></div></div>
+		<div class='form-group'><label class='col-sm-2 control-label' for='inputEmail'>Email</label><div class='col-sm-6'><input type='text' class='form-control' id='inputEmail' placeholder='Entrez un email' value='{{EMAIL}}'></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd1'>Mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd1' placeholder='Mot de passe' value=''></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd2'>Confirmation du mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd2' placeholder='Confirmez' value=''></div></div>
-		<div class='form-group'><label class='col-sm-2 control-label' for='selectRank'>Rang</label><div class='col-sm-8'><select class='form-control' id='selectRank'>
-			{{#each ranks}}
-				{{#if this.sel}}
-					<option value='{{this.RANK}}' selected>{{this.rankName}}</option>
-				{{else}}
-					<option value='{{this.RANK}}'>{{this.rankName}}</option>
-				{{/if}}
-			{{/each}}
-		</select></div></div>		
+		{{#if ranks}}
+			<div class='form-group'><label class='col-sm-2 control-label' for='selectRank'>Rang</label><div class='col-sm-8'><select class='form-control' id='selectRank'>
+				{{#each ranks}}
+					{{#if this.sel}}
+						<option value='{{this.RANK}}' selected>{{this.rankName}}</option>
+					{{else}}
+						<option value='{{this.RANK}}'>{{this.rankName}}</option>
+					{{/if}}
+				{{/each}}
+			</select></div></div>
+		{{/if}}
 		<div class='form-group'><div class='col-sm-offset-2 col-sm-4'><button type='submit' class='btn btn-primary btn-sm'>Valider</button></div></div>
 		<input id='userID' value={{this.ID}} type='hidden'>
 	</form>
@@ -115,14 +121,15 @@
 		<td><input type='checkbox' idP={{this.ID}}></td>
 		{{#if this.writable}}
 			<td><a href='#' name='affEdit-{{this.ID}}' idP={{this.ID}} ><span class='glyphicon glyphicon-pencil'></span></a></td>
+			<td><a href='#' name='del-{{this.ID}}' idP={{this.ID}}><span class='glyphicon glyphicon-trash'></span></a></td>
 		{{else}}
 			<td><a href='#' name='affEdit-{{this.ID}}' idP={{this.ID}} ><span class='glyphicon glyphicon-eye-open'></span></a></td>
+			<td></td>
 		{{/if}}
-		<td><a href='#' name='del-{{this.ID}}' idP={{this.ID}}><span class='glyphicon glyphicon-trash'></span></a></td>
 		<td>{{this.NOM}}</td>
 		<td>{{this.PRENOM}}</td>
 		<td>{{this.VILLE}}</td>
-		<td><a href=#' name='region-{{this.ID}}' idR={{this.IDREGION}}>{{this.nomRegion}}</a></td>
+		<td><a href='#' name='region-{{this.ID}}' idR={{this.IDREGION}}>{{this.nomRegion}}</a></td>
 		{{#if this.PHOTO}}
 			<td><span class='glyphicon glyphicon-ok-sign'></span></td>
 		{{else}}
@@ -195,7 +202,6 @@
 
 <!-- Affichage d'une personne -->
 <script id="affichage-personne-template" type="text/x-handlebars-template">
-	<!-- zone de photo -->
 	<div class='col-md-3 col-xs-3'>
 		{{#if PHOTO}}
 			<img id='photo' src='./img/{{PHOTO}}.jpg' class='upImg'>
@@ -204,7 +210,6 @@
 		{{/if}}
 	</div>
 
-	<!-- zone d'infos -->
 	<div class='col-md-6 col-xs-6'>
 		{{#if affCommandes}}
 			<div class='btn-group'>
@@ -220,7 +225,7 @@
 		  <dt>Hobbys</dt><dd>{{HOBBY}}</dd>
 		</dl>
 	</div>
-	<!-- zone de participations -->
+
 	<div class='col-md-3 col-xs-3'>
 		{{#if evenements}}
 			<div class='list-group'>
@@ -239,7 +244,6 @@
 
 <!-- Formulaire de modification de personne -->
 <script id="modification-personne-template" type="text/x-handlebars-template">
-	<!-- zone de photo -->
 	<div class='col-md-3 col-xs-3'>
 		{{#if affPhoto}}
 			{{#if PHOTO}}
@@ -256,9 +260,7 @@
 		{{/if}}
 	</div>
 	
-	<!-- zone d'édition -->
 	<div class='col-md-6 col-xs-6'>
-		<!-- Boutons de navigation, ajout, suppression -->
 		{{#if affCommandes}}
 			<div class='btn-group'>
 				<button id='precButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
@@ -268,10 +270,9 @@
 				<button id='nextButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
 			</div>
 		{{else}}
-			<h1 class='text-info'>Ajout d'une personne</h1>
+			<h1 class='text-info'>Ajout d&apos;une personne</h1>
 		{{/if}}
 	
-		<!-- Formulaire de modification -->
 		<form class='form-horizontal' role='form' id='personneModif' idP={{ID}}>
 			<div class='form-group'><label class='col-sm-4 control-label' for='inputNom'>Nom</label><div class='col-sm-8'><input type='text' class='form-control' id='inputNom' placeholder='Entrez un nom' value='{{NOM}}'></div></div>
 			<div class='form-group'><label class='col-sm-4 control-label' for='inputPrenom'>Prénom</label><div class='col-sm-8'><input type='text' class='form-control' id='inputPrenom' placeholder='Entrez le prénom' value='{{PRENOM}}'></div></div>
@@ -297,11 +298,10 @@
 			{{else}}
 				<div class='form-group'><div class='col-sm-offset-4 col-sm-8'><div class='checkbox'><label><input id='inputEP' type='checkbox'> Effacer mes données après l'évènement</label></div></div></div>
 			{{/if}}	
-			<div class='form-group'><div class='col-sm-offset-4 col-sm-8'><button type='submit' class='btn btn-primary btn-sm'>Valider</button></div></div>";
+			<div class='form-group'><div class='col-sm-offset-4 col-sm-8'><button type='submit' class='btn btn-primary btn-sm'>Valider</button></div></div>
 		</form>
 	</div>
 
-	<!-- zone de participations -->
 	<div class='col-md-3 col-xs-3'>
 		{{#if evenements}}
 			<div class='list-group'>
@@ -320,7 +320,7 @@
 <!-- Liste des personnes ayant déjà fourni leur photo -->
 <script id="listeAvecPhoto-personne-template" type="text/x-handlebars-template">
 	<h1 class='text-info'>Liste des personnes ayant déjà fourni une photo</h1>
-	<p>Inscrivez vous tout de même pour nous dire que vous venez en 2014, vous pourrez dans le même temps changer votre photo. Si vous souhaitez qu'on efface votre photo, envoyez-nous un mail !</p>
+	<p>Inscrivez vous tout de même pour nous dire que vous venez en 2014, vous pourrez dans le même temps changer votre photo. Si vous souhaitez qu&apos;on efface votre photo, envoyez-nous un mail !</p>
 	{{#if pages}}
 	<div>
 		<ul class='pagination'>
@@ -369,7 +369,7 @@
 	<thead><tr>
 		<th width=16></th>
 		<th width=16><a href='#' name='addU'><span class='glyphicon glyphicon-plus'></span></a>
-		</th><th>PSEUDO</th><th>RANG</th>
+		</th><th>PSEUDO</th><th>EMAIL</th><th>RANG</th><th>Connexion</th>
 	</tr></thead>
 	<tbody>
 	{{#each users}}
@@ -385,7 +385,9 @@
 		{{/if}}
 		</td>
 		<td>{{this.PSEUDO}}</td>
+		<td>{{this.EMAIL}}</td>
 		<td>{{this.rankName}}</td>
+		<td>le {{this.shortDate}} à {{this.HEURE}}</td>
 		</tr>
 	{{/each}}
 	</tbody>
@@ -394,7 +396,7 @@
 
 <!-- Formulaire de fusion pour les attributs : NOM, PRENOM, VILLE, REGION, HOBBY, DIVERS -->
 <script id="attribute-fusion-template" type="text/x-handlebars-template">
-	<h1>Fusion d'éléments</h1>
+	<h1>Fusion d&apos;éléments</h1>
 	<h4>Choisissez le bon attribut : {{NOM}}</h4>
 	<form role='form' id='chooseGoodAttribute'>
 		{{#each items}}
@@ -418,9 +420,9 @@
 	</form>
 </script>
 
-<!-- Formulaire de fusion pour l'attribut PHOTO -->
+<!-- Formulaire de fusion pour l\'attribut PHOTO -->
 <script id="photo-fusion-template" type="text/x-handlebars-template">
-	<h1>Fusion d'éléments</h1>
+	<h1>Fusion d&apos;éléments</h1>
 	<h4>Choisissez la bonne photo</h4>
 	{{#each items}}
 		<div class='col-sm-4'>
@@ -428,4 +430,13 @@
 		</div>
 	{{/each}}
 	<button type='button' id='cancelButton' class='btn btn-danger'>Annuler</button>
+</script>
+
+<!-- Formulaire pour les filtres -->
+<script id="filtres-template" type="text/x-handlebars-template">
+	<div class='filtres'>
+		{{#each items}}
+			<span name='bf-{{this.f}}' class='label {{this.className}}'>{{this.text}} <a href='#' name='filtre' f='{{this.f}}'><span class='glyphicon glyphicon-remove-sign'></span></a></span>
+		{{/each}}
+	</div>
 </script>

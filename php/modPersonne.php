@@ -7,10 +7,19 @@
 	if (!isset($_SESSION['IDtrombi'])) die('({state:"failed",error:"logOff"})');
 
 	// Avec le rang 7 on peut modifier n'importe qui
+	// Avec un rang user on peut modifier une des ses propres propositions
 	// Avec le rang 2 on peut modifier une de ses suggestions
 	if (isset($_POST['ID'])) {
 		$id=$_POST['ID'];
 		if (author("modPerson",array('ID'=>$id))){
+			require_once('./conx/connexion.php');
+			// Dans le cas d'une modification par user ou waiting_user, on veut vérifier
+			// que le compte est bien propriétaire de l'item à modifier
+			if ((RANK==RANG_WAITING_USER)||(RANK==RANG_USER)) {
+				$select=$connexion->prepare('SELECT COUNT(*) FROM '.$prefixeDB.'personnes WHERE ID=:id AND IDA=:idA;');
+				$select->execute(array('id'=>$id, 'idA'=>$_SESSION['IDtrombi']));
+				if ($select->fetchColumn()=='0') die('({state:"failed",error:"You are not owner of this item"})');
+			}
 		
 			// Il faut au moins une vérification, sans quoi la modification est inutile
 			$requete='';
@@ -19,7 +28,6 @@
 				'id'=>$id,
 				'date'=>date('Y-m-d'),
 				'heure'=>date('H:i:s'),
-				'ip'=>$_SESSION['ipaddr']
 			);
 			
 			if(isset($_POST['NOM'])) {
@@ -30,6 +38,11 @@
 				$requete=$requete." PRENOM=:prenom,";
 				$params['prenom']=$_POST['PRENOM'];
 			}
+			if(isset($_POST['VILLE'])) {
+				$requete=$requete." VILLE=:ville,";
+				$params['ville']=$_POST['VILLE'];
+			}
+
 			if(isset($_POST['IDREGION'])) {
 				$requete=$requete." IDREGION=:idr,";
 				$params['idr']=$_POST['IDREGION'];
@@ -56,9 +69,12 @@
 			}
 			if ($requete!='') {
 				// Il y a donc une modification à faire
-				require_once('./conx/connexion.php');
-				$modPersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET '.$requete.' DATE=:date, HEURE=:heure, IP=:ip WHERE ID=:id');
-		
+				if ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) {
+					$params['ida']=$_SESSION['IDtrombi'];
+					$modPersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET '.$requete.' DATE=:date, HEURE=:heure WHERE ID=:id AND IDA=:ida');
+				} else {
+					$modPersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET '.$requete.' DATE=:date, HEURE=:heure WHERE ID=:id');
+				}
 				try {
 					$modPersonne->execute($params);
 				} catch( Exception $e ){

@@ -6,7 +6,7 @@
 	$liens='liens:[]';
 	
 	if (RANK>0) {
-		$user='user:{ID:'.$_SESSION['IDtrombi'].', PSEUDO:"'.$_SESSION['PSEUDOtrombi'].'",RANK:'.$_SESSION['RANKtrombi'].'}';
+		$user='user:{ID:'.$_SESSION['IDtrombi'].', PSEUDO:"'.$_SESSION['PSEUDOtrombi'].'", EMAIL:"'.$_SESSION['EMAILtrombi'].'",RANK:'.$_SESSION['RANKtrombi'].'}';
 		require_once('./conx/connexion.php');
 
 		// Les admins voient tout
@@ -24,7 +24,7 @@
 		}
 
 		$visibles=array(); // Enregistre les personnes visibles
-		if ((RANK>=RANG_VISITOR) || ($wh!="")) {
+		if ((RANK>=RANG_VISITOR) || (RANK==RANG_WAITING_USER) || ($wh!="")) {
 			if (RANK>=RANG_ADMIN) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes ORDER BY NOM, PRENOM ASC;');
 			elseif (RANK==RANG_USER) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) OR IDA='.$_SESSION['IDtrombi'].' ORDER BY NOM, PRENOM ASC;');
 			elseif (RANK==RANG_VISITOR) {
@@ -33,7 +33,10 @@
 				} else {
 					$selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) ORDER BY NOM, PRENOM ASC;');
 				}
-			} else $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, PHOTO, DATE, HEURE, IDA  FROM '.$prefixeDB.'personnes WHERE ID IN ('.$wh.');');
+			} elseif (RANK==RANG_WAITING_USER) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE IDA='.$_SESSION['IDtrombi'].' ORDER BY NOM, PRENOM ASC;');
+			else $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, PHOTO, DATE, HEURE, IDA  FROM '.$prefixeDB.'personnes WHERE ID IN ('.$wh.');');
+			
+
 			$selectPersonnes->execute();
 			$jsonData='';
 			while( $personne = $selectPersonnes->fetch(PDO::FETCH_ASSOC) ) {
@@ -55,7 +58,7 @@
 		$evenements='evenements:['.$jsonData.']';
 		$selectEvents->closeCursor();
 		
-		if ((RANK>=RANG_VISITOR) || ($wh!="")) {
+		if ((RANK>=RANG_VISITOR) || (RANK==RANG_WAITING_USER) || ($wh!="")) {
 			$selectParticipations = $connexion->prepare('SELECT ID, IDP, IDE FROM '.$prefixeDB.'participations;');
 			$selectParticipations->execute();
 			$jsonData='';

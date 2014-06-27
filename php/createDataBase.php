@@ -28,7 +28,6 @@ $createPersonnesTable = $connexion->prepare("CREATE TABLE IF NOT EXISTS `".$pref
 	`SUG` tinyint(1) NOT NULL,
 	`DATE` date NOT NULL,
 	`HEURE` time NOT NULL,
-	`IP` varchar(20) NOT NULL,
 	`PHOTO` text NOT NULL,
 	`IDA` int(11) NOT NULL,
 	PRIMARY KEY (`ID`)
@@ -38,7 +37,10 @@ $createUsersTable = $connexion->prepare("CREATE TABLE IF NOT EXISTS `".$prefixeD
 	`ID` int(11) NOT NULL AUTO_INCREMENT,
 	`PSEUDO` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 	`PWD` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+	`EMAIL` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 	`RANK` tinyint(4) NOT NULL,
+	`DATE` date NOT NULL,
+	`HEURE` time NOT NULL,
 	PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;");
 

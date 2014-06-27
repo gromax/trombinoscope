@@ -13,6 +13,14 @@
 	if ( ($id!=NULL) && author("delPerson",array('ID'=>$id))){
 		require_once('./conx/connexion.php');
 
+		// Dans le cas d'une modification par user ou waiting_user, on veut vérifier
+		// que le compte est bien propriétaire de l'item à modifier
+		if ((RANK==RANG_WAITING_USER)||(RANK==RANG_USER)) {
+			$select=$connexion->prepare('SELECT COUNT(*) FROM '.$prefixeDB.'personnes WHERE ID=:id AND IDA=:idA;');
+			$select->execute(array('id'=>$id, 'idA'=>$_SESSION['IDtrombi']));
+			if ($select->fetchColumn()=='0') die('({state:"failed",error:"You are not owner of this item"})');
+		}
+
 		// Préparation des requêtes
 		$selectPersonne = $connexion->prepare('SELECT PHOTO FROM '.$prefixeDB.'personnes WHERE ID=:id ;'); // Récupération du nom de la photo pour effacement
 		$deleteParticipations = $connexion->prepare('DELETE FROM '.$prefixeDB.'participations WHERE IDP=:idp;');

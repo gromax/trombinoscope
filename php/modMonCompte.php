@@ -3,13 +3,14 @@
 	if (!isset($_SESSION['IDtrombi'])) die('({state:"failed",error:"logOff"})');
 	
 	if (author("modMyAccount",null)){
-		if(isset($_POST['pwd'])) {
+		if(isset($_POST['pwd']) && isset($_POST['email'])) {
 			require_once('./conx/connexion.php');
 			$id=$_SESSION['IDtrombi'];
 			$pwd=$_POST['pwd'];
-			$modif = $connexion->prepare('UPDATE '.$prefixeDB.'users SET PWD=:pwd WHERE ID=:id;');
+			$email=$_POST['email'];
+			$modif = $connexion->prepare('UPDATE '.$prefixeDB.'users SET PWD=:pwd, EMAIL=:email WHERE ID=:id;');
 			try {
-				$modif->execute(array('pwd'=>$pwd, 'id'=>$id));
+				$modif->execute(array('pwd'=>$pwd, 'id'=>$id, 'email'=>$email));
 			} catch( Exception $e ){
 				die('({state:"failed",error:"mod compte perso : '.$e->getMessage().'"})');
 			}			
