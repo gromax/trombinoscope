@@ -125,23 +125,24 @@
 
 <?php if (RANK==0) { ?>
 
-					<h4>Qu'est ce que c'est ?</h4>
-					C'est un outil permettant de générer un trombinoscope sous format papier et, si vous êtes nombreux à le demander, en ligne. Ce trombinoscope est destiné à Lud'Été 2014, mais rien n'empêche qu'il serve à d'autres évènements.
-					Bien sûr, il n'ya rien d'obligatoire : vous pouvez venir à Lud'Été sans nous fournir de photo.
+					<h4>Qu'est -e que c'est ?</h4>
+					C'est un outil permettant de générer un trombinoscope sous format papier et, si vous êtes nombreux à le demander, en ligne. Ce trombinoscope est destiné à Lud'Été 2014, mais rien n'empêche qu'il serve à d'autres événements.
+					Bien sûr, il n'y a rien d'obligatoire : vous pouvez venir à Lud'Été sans nous fournir de photo.
 					Cet outil n'est pas géré par Mensa et est hébergé sur le serveur personnel de Maxence Klein. Nous stockons un minimum d'informations : nom, prénom, photo, tout le reste est optionnel.
 					<h4>Quoi faire ?</h4>
 					Connectez-vous avec les identifiants qui vous ont été fournis. Maintenant :
 					<ul>
-						<li>Ajoutez une nouvelle personne</li>
+						<li><b>Créez un compte</b> Vous pouvez choisir le mot de passe que vous voulez, il n'apparaît pas en clair dans la base de données. Vous pouvez commencer avec ce nouveau compte. Il vous donnera accès aux autres photos quand il sera validé par les administrateurs.</li>
+						<li>Ajoutez une nouvelle photo <i>en haut</i></li>
 						<li>Renseignez les différents champs. On demande surtout nom et prénom.</li>
 						<li>Une case à cocher vous permet d'indiquer si vous êtes d'accord pour que votre photo soit visible sur un trombinoscope en ligne (avec mot de passe bien sûr)</li>
-						<li>Une case à cocher vous permet d'indiquer si vous souhaitez que votre photo soit supprimée une fois l'évènement terminé.</li>
-						<li>Le champ "Divers" sert à indiquer toute information que vous voulez donner, comme de dire si vous allez animer quelque chose, ou rappeler les années où vous êtes venus à lud'Été (Serge aimerait bien le savoir...)</li>
+						<li>Une case à cocher vous permet d'indiquer si vous souhaitez que votre photo soit supprimée une fois l'événement terminé.</li>
+						<li>Le champ "Divers" sert à indiquer toute information que vous voulez donner, comme de dire si vous allez animer quelque chose, ou rappeler les années où vous êtes venus à Lud'Été (Serge aimerait bien le savoir...)</li>
 						<li>Quand vous avez rempli tous les champs, validez.</li>
 						<li>Si tout se passe bien, vous pouvez maintenant mettre une photo. Choisissez-en une pas trop grosse (<500ko) et de format jpg ou jpeg. Préférez un format 4/3 vertical.</li>
-						<li>Si vous avez plusieurs personnes à ajouter, vous pouvez en créer de nouvelles (N'ajoutez pas Casimir ou les Pieds Nikelés, je crois qu'ils sont déjà pris ailleurs !)</li>
+						<li>Si vous avez plusieurs personnes à ajouter, vous pouvez en créer de nouvelles : Une personne peut ajouter les photos pour tous ses invités (N'ajoutez pas Casimir ou les Pieds nickelés, je crois qu'ils sont déjà pris ailleurs !)</li>
 						<li>Vous pouvez toujours modifier les personnes que vous avez ajoutées, ou même les supprimer.</li>
-						<li><strong>Attention !</strong> Dès que vous vous déconnectez, vous ne pouvez plus rien modifier : C'est le principe d'une boîte à lettre. Si vous avez un problème, pas de panique, vous pouvez toujours recommencer. Si nous avons des doublons, nous ferons le tri, et sinon, envoyez-nous un mail !</li>
+						<li><b>Attention ! si vous n'avez pas créé de compte</b>, dès que vous vous déconnectez, vous ne pouvez plus rien modifier : C'est le principe d'une boîte à lettres. Si vous avez un problème, pas de panique, vous pouvez toujours recommencer. Si nous avons des doublons, nous ferons le tri, et sinon, envoyez-nous un mail !</li>
 					</ul>
 <?php } ?>
 				</div>

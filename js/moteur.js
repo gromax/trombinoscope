@@ -17,7 +17,16 @@ function init(){
 			affichage.setPageActive(null);
 			affichage.trombinoscope();
 		} else {
-			afficherFormulaireModificationPersonne(-1);
+			if (RANK==RANG_ANONYME_CONTRIBUTOR) { addModUser(-1); }
+			else { // C'est donc un utilisateur en attente
+				if (data.personnes.length>0) {
+					data.setFilter(true,null);
+					data.applyFilter(true);
+					affichage.trombinoscope();
+				} else {
+					afficherFormulaireModificationPersonne(-1);
+				}
+			}
 		}
 	}
 }
@@ -108,7 +117,7 @@ function validAddModUser(){
 	var reponse;
 	var user;
 	var id=$('#userID').val();
-	var pseudo=$('#inputPseudo').val();
+	var pseudo=trim($('#inputPseudo').val());
 	var email=$('#inputEmail').val();
 	var pwdInput1=$('#pwd1');
 	var pwdInput2=$('#pwd2');
@@ -117,38 +126,42 @@ function validAddModUser(){
 	if (RANK>=RANG_ADMIN) {	rank=$('#selectRank').val(); }
 	else {rank=0;}
 
-	if (pwdInput1.val()!=pwdInput2.val()) addAlert("Mots de passe différents.",0);
+	if (pwdInput1.val()!=pwdInput2.val()) { addAlert("Mots de passe différents.",0); }
 	else {
-		pwd=MD5(PWD_SEED+pwdInput1.val());
-		pwdInput1.val('');
-		pwdInput2.val('');
-		reponse=manager.addModUser(pseudo, email, pwd, rank, id);
-		if (reponse.state=="success") {
-			if (id==-1) {
-				user={ID:reponse.insertedID, PSEUDO:pseudo, EMAIL:email, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
-				if (data.usersList!=null) { data.usersList.push(user); }
-				addAlert("Succès de la création.",1);
-			} else {
-				user=data.getUserById(id);
-				if (user!=null) {
-					user.PSEUDO=pseudo;
-					user.EMAIL=email;
-					user.RANK=rank;
-					user.rankName=rankName(rank);
-					addAlert("Succès de la modification.",1);
-				}
-			}
-			if (RANK>=RANG_ADMIN) { affichage.listeUsers(); }
-			else {
-				// On provoque la reconnexion avec  le nouvel utilisateur
-				manager.post('./php/login.php',{pwd:pwd,login:pseudo});
-				location.reload();
-			}
+		if (pseudo.length<6) {
+			addAlert("Votre pseudo est trop court.",0);
 		} else {
-			if (id==-1) { addAlert("Échec de la création de l'utilisateur.", 0);}
-			else { addAlert("Échec de la modification de l'utilisateur.", 0);}
-		}
+			pwd=MD5(PWD_SEED+pwdInput1.val());
+			pwdInput1.val('');
+			pwdInput2.val('');
+			reponse=manager.addModUser(pseudo, email, pwd, rank, id);
+			if (reponse.state=="success") {
+				if (id==-1) {
+					user={ID:reponse.insertedID, PSEUDO:pseudo, EMAIL:email, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
+					if (data.usersList!=null) { data.usersList.push(user); }
+					addAlert("Succès de la création.",1);
+				} else {
+					user=data.getUserById(id);
+					if (user!=null) {
+						user.PSEUDO=pseudo;
+						user.EMAIL=email;
+						user.RANK=rank;
+						user.rankName=rankName(rank);
+						addAlert("Succès de la modification.",1);
+					}
+				}
+				if (RANK>=RANG_ADMIN) { affichage.listeUsers(); }
+				else {
+					// On provoque la reconnexion avec  le nouvel utilisateur
+					manager.post('./php/login.php',{pwd:pwd,login:pseudo});
+					location.reload();
+				}
+			} else {
+				if (id==-1) { addAlert("Échec de la création de l'utilisateur.", 0);}
+				else { addAlert("Échec de la modification de l'utilisateur.", 0);}
+			}
 
+		}
 	}
 }
 

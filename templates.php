@@ -16,6 +16,8 @@
 <script id="addMod-users-template" type="text/x-handlebars-template">
 	{{#if this.addU}}
 		<h1 class='text-info'>Ajouter un compte</h1>
+		<p><i>Au moins 6 caractères pour le pseudo. Attention, la casse (majuscule / minuscule) est prise en compte !</i></p>
+		<p><i>L&apos;email n&apos;est pas obligatoire.</i></p>
 	{{else}}
 		<h1 class='text-info'>Modifier un compte</h1>
 		<p><i>Laissez le mot de passe vide pour ne pas le changer</i></p>
