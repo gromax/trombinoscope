@@ -17,15 +17,13 @@ function init(){
 			affichage.setPageActive(null);
 			affichage.trombinoscope();
 		} else {
-			if (RANK==RANG_ANONYME_CONTRIBUTOR) { addModUser(-1); }
-			else { // C'est donc un utilisateur en attente
-				if (data.personnes.length>0) {
-					data.setFilter(true,null);
-					data.applyFilter(true);
-					affichage.trombinoscope();
-				} else {
-					afficherFormulaireModificationPersonne(-1);
-				}
+			// C'est donc un utilisateur en attente
+			if (data.personnes.length>0) {
+				data.setFilter(true,null);
+				data.applyFilter(true);
+				affichage.trombinoscope();
+			} else {
+				accueilWaitingUser();
 			}
 		}
 	}
@@ -36,21 +34,34 @@ function rankName(rank){
 	else {
 		if (rank==RANG_ADMIN) { return "Administrateur"; }
 		else {
-			if (rank==RANG_USER) { return "Utilisateur"; }
+			if (rank==RANG_PRIVILEGED_USER) { return "Utilisateur privilégié"; }
 			else {
-				if (rank==RANG_VISITOR) { return "Visiteur"; }
+				if (rank==RANG_USER) { return "Utilisateur"; }
 				else {
-					if (rank==RANG_WAITING_USER) { return "Utilisateur en attente"; }
+					if (rank==RANG_VISITOR) { return "Visiteur"; }
 				}
 			}
 		}
 	}
-	return "Contributeur anonyme";
+	return "Utilisateur en attente";
 }
 
 //----------------------------
 // Interface
 //-----------------------------
+
+// Ecran d'accueil pour un utilisateur en attente
+function accueilWaitingUser(){
+	var container=$("#mainContent");
+	container.empty();
+		
+	var source   = $("#accueil-waiting-user").html();
+	var template = Handlebars.compile(source);
+	container.append(template());
+	$("a[name='addPerson']").bind("click",function() { afficherFormulaireModificationPersonne(-1); });
+
+}
+
 // Réponse à un click sur le bouton "Trombinoscope" de la bannière
 function trombinoscopeButtonClick(){
 	if (RANK>=RANG_VISITOR) {
@@ -61,7 +72,7 @@ function trombinoscopeButtonClick(){
 		}
 		affichage.trombinoscope();
 	} else {
-		if ((RANK==RANG_ANONYME_CONTRIBUTOR)||(RANK=RANG_WAITING_USER)) {
+		if (RANK=RANG_WAITING_USER) {
 			// Permet de voir ses propres photos
 			if (data.personnes.length>0) {
 				data.setFilter(true,null);
@@ -77,16 +88,25 @@ function addModUser(id){
 	var i;
 	var user=null;
 	var context={ID:id};
+
 	if (id==data.user.ID) { modifMonCompteForm(); }
 	else {
 		if (id!=-1) { user=data.getUserById(id); }
-		else {context.addU=true; }
+		else {
+			context.addU=true;
+			if (RANK<RANG_ADMIN) {
+				// Il faut ajouter une clé
+				context.needKey=true;
+			}
+		}
 
 		if (user==null) {
+			context.NOMPRENOM="";
 			context.PSEUDO="";
 			context.EMAIL="";
-			context.RANK=RANG_ANONYME_CONTRIBUTOR;
+			context.RANK=RANG_WAITING_USER;
 		} else {
+			context.NOMPRENOM=user.NOMPRENOM;
 			context.PSEUDO=user.PSEUDO;
 			context.RANK=user.RANK;
 			context.EMAIL=user.EMAIL;
@@ -118,49 +138,88 @@ function validAddModUser(){
 	var user;
 	var id=$('#userID').val();
 	var pseudo=trim($('#inputPseudo').val());
+	var nomPrenom=trim($('#inputNomPrenom').val());
 	var email=$('#inputEmail').val();
 	var pwdInput1=$('#pwd1');
 	var pwdInput2=$('#pwd2');
 	var rank;
+	var key;
+
+	if ((id==-1) && (RANK<RANG_ADMIN)) {
+		key=MD5(PWD_SEED+$('#key').val());
+		$('#key').val('');
+	} else { key=null; }
 
 	if (RANK>=RANG_ADMIN) {	rank=$('#selectRank').val(); }
-	else {rank=0;}
+	else {rank=null;}
 
 	if (pwdInput1.val()!=pwdInput2.val()) { addAlert("Mots de passe différents.",0); }
 	else {
-		if (pseudo.length<6) {
-			addAlert("Votre pseudo est trop court.",0);
-		} else {
-			pwd=MD5(PWD_SEED+pwdInput1.val());
-			pwdInput1.val('');
-			pwdInput2.val('');
-			reponse=manager.addModUser(pseudo, email, pwd, rank, id);
-			if (reponse.state=="success") {
-				if (id==-1) {
-					user={ID:reponse.insertedID, PSEUDO:pseudo, EMAIL:email, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
-					if (data.usersList!=null) { data.usersList.push(user); }
-					addAlert("Succès de la création.",1);
-				} else {
-					user=data.getUserById(id);
-					if (user!=null) {
-						user.PSEUDO=pseudo;
-						user.EMAIL=email;
-						user.RANK=rank;
-						user.rankName=rankName(rank);
-						addAlert("Succès de la modification.",1);
-					}
-				}
-				if (RANK>=RANG_ADMIN) { affichage.listeUsers(); }
-				else {
-					// On provoque la reconnexion avec  le nouvel utilisateur
-					manager.post('./php/login.php',{pwd:pwd,login:pseudo});
-					location.reload();
-				}
-			} else {
-				if (id==-1) { addAlert("Échec de la création de l'utilisateur.", 0);}
-				else { addAlert("Échec de la modification de l'utilisateur.", 0);}
-			}
+		pwd=trim(pwdInput1.val());
+		if ((id!=-1)&&(pwd=='')) { pwd=null; }
+		else { pwd=MD5(PWD_SEED+pwd); }
 
+		reponse=manager.addModUser(pseudo, email, pwd, rank, id, key, nomPrenom);
+		if (reponse.state=="success") {
+			if(rank==null) { rank=RANG_WAITING_USER; }
+			if (id==-1) {
+				user={ID:reponse.insertedID, PSEUDO:pseudo, NOMPRENOM:nomPrenom, EMAIL:email, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
+				if (data.usersList!=null) { data.usersList.push(user); }
+				addAlert("Succès de la création.",1);
+			} else {
+				user=data.getUserById(id);
+				if (user!=null) {
+					user.PSEUDO=pseudo;
+					user.EMAIL=email;
+					user.RANK=rank;
+					user.rankName=rankName(rank);
+					user.NOMPRENOM=nomPrenom;
+					addAlert("Succès de la modification.",1);
+				}
+			}
+			if (RANK>=RANG_ADMIN) { affichage.listeUsers(); }
+			else {
+				// On provoque la reconnexion avec  le nouvel utilisateur
+				manager.post('./php/login.php',{pwd:pwd,login:pseudo});
+				location.reload();
+			}
+		} else {
+			addAlert(reponse.error, 0);
+		}
+	}
+}
+
+// Affichage du formulaire de modification de mon compte
+function modifMonCompteForm(){
+	var container=$("#mainContent");
+	container.empty();
+	var source   = $("#mod-monCompte-template").html();
+	var template = Handlebars.compile(source);
+	affichage.actif="";
+	var context={PSEUDO:data.user.PSEUDO, EMAIL:data.user.EMAIL, NOMPRENOM:data.user.NOMPRENOM};
+	container.append(template(context));
+	$('#modMonCompte').submit(function(){ doModMonCompte(); return false; });
+}
+
+// Validation du formulaire précédent
+function doModMonCompte(){
+	var reponse;
+	var pwd;
+	var nomPrenom=trim($('#inputNomPrenom').val());
+	var email=$('#inputEmail').val();
+	var pwdInput1=$('#pwd1');
+	var pwdInput2=$('#pwd2');
+	if (pwdInput1.val()!=pwdInput2.val()) addAlert("Mots de passe différents.",0);
+	else {
+		pwd=trim(pwdInput1.val());
+		if (pwd=='') { pwd=null; } else { pwd=MD5(PWD_SEED+pwd); }
+		reponse=manager.addModUser(null,email,pwd,null,data.user.ID,null,nomPrenom);
+		if (reponse.state=="success") {
+			addAlert("Les modifications ont été effectuées.",1);
+			data.user.EMAIL=email;
+			data.user.NOMPRENOM=nomPrenom;
+		} else {
+			addAlert(reponse.error,0);
 		}
 	}
 }
@@ -198,7 +257,7 @@ function delFilter(f) {
 		case 'V' : filter={filtreV:null}; break;
 		case 'P' : filter={filtreP:null}; break;
 		case 'Se' : filter={activeSearch:false}; break;
-		case 'MC' : filter={filtreMyContribs:null}; break;
+		case 'C' : filter={filtreContribsOf:null}; break;
 		default : filter={};
 	}
 
@@ -323,7 +382,7 @@ function choixModifOuAffichage(id){
 // Création de l'interface permettant de modifier une personne
 function afficherFormulaireModificationPersonne(id){
 	var container=$("#mainContent");
-	var context={};
+	var context={ID:-1};
 	var personne, nouvelleRegion, nouvelEvenement;
 	var i;
 	
@@ -342,24 +401,15 @@ function afficherFormulaireModificationPersonne(id){
 	}
 	
 	//--- Création du contexte -------
-	if (personne==null){
-		context.ID=-1;
-		context.NOM="";
-		context.PRENOM="";
-		context.VILLE="";
-		context.HOBBY="";
-		context.DIVERS="";
-	} else {
+	if (personne!=null){
 		context.ID=personne.ID;
 		context.NOM=personne.NOM;
 		context.PRENOM=personne.PRENOM;
 		context.VILLE=personne.VILLE;
 		context.HOBBY=personne.HOBBY;
 		context.DIVERS=personne.DIVERS;
-		context.affCommandes=true;
 		if (personne.VL==1) { context.VL=true; }
 		if (personne.EP==1) { context.EP=true; }
-		context.affPhoto=true;
 		if (personne.PHOTO!='') { context.PHOTO=personne.PHOTO; }
 	}
 	context.regions=[];
@@ -380,7 +430,12 @@ function afficherFormulaireModificationPersonne(id){
 	
 	//--- Applcation du contexte au template handlebars -------
 	
-	var source   = $("#modification-personne-template").html();
+	var source;
+	if (personne==null) {
+		source=$("#ajout-personne-template").html();
+	} else {
+		source=$("#modification-personne-template").html();
+	}
 	var template = Handlebars.compile(source);
 
 	container.empty();
@@ -545,44 +600,12 @@ function deconnexion() {
 	location.reload();
 }
 
-function modifMonCompteForm(){
-	var container=$("#mainContent");
-	container.empty();
-	var source   = $("#mod-monCompte-template").html();
-	var template = Handlebars.compile(source);
-	affichage.actif="";
-	var context={PSEUDO:data.user.PSEUDO, EMAIL:data.user.EMAIL};
-	container.append(template(context));
-	$('#modMonCompte').submit(function(){ doModMonCompte(); return false; });
-}
-
-function doModMonCompte(){
-	var reponse;
-	var pwd;
-	var email=$('#inputEmail').val();
-	var pwdInput1=$('#pwd1');
-	var pwdInput2=$('#pwd2');
-	if (pwdInput1.val()!=pwdInput2.val()) addAlert("Mots de passe différents.",0);
-	else {
-		pwd=pwdInput1.val();
-		pwdInput1.val('');
-		pwdInput2.val('');
-		reponse=manager.modMonCompte(pwd,email);
-		if (reponse.state=="success") {
-			addAlert("Les modifications ont été effectuées.",1);
-			data.user.EMAIL=email;
-		} else {
-			addAlert("Les modifications ont échoué.",0);
-		}
-	}
-}
-
 //-------------------------
 //      Les données
 //-------------------------
 
 var data = {
-	user:null,	// ID, rang de l'utilisateur
+	user:{ID:null, PSEUDO:"", NOMPRENOM:"", EMAIL:"", RANK:0},	// ID, rang de l'utilisateur
 	usersList:null, // Liste des utilisateurs, pour les admins
 	personnes:[], // liste des personnes inscrites
 	evenements:[], // Liste des évènements
@@ -607,7 +630,7 @@ var data = {
 		{ID:16, NOM:"Rhônes Alpes"},
 		{ID:17, NOM:"Etranger"}
 	],
-	filtreMyContribs:null, // Affiche seulement mes contributions
+	filtreContribsOf:null, // Affiche seulement mes contributions
 	filtreS:null, // Affiche seulement les éléments dont le statut suggestion est 0/1/Tous(null)
 	filtreP:null, // Affiche seulement les éléments qui ont une photo 0/1/Tous(null)
 	filtreV:null, // Affiche seulement les éléments qui souhaitent être visibles en ligne 0/1/Tous(null)
@@ -632,6 +655,10 @@ data.load=function(){
 	this.personnes=getData.personnes;
 	this.evenements=getData.evenements;
 	liens=getData.liens;
+	if (getData.users) {
+			this.usersList=getData.users;
+			this.getUsersList();
+	}
 
 	for (i=0;i<this.personnes.length;i++) {
 		this.personnes[i].liens=[];
@@ -653,6 +680,28 @@ data.load=function(){
 	}
 	
 	for(i=0;i<this.evenements.length;i++) this.evenements[i].liens.sort(comparePersonnesAlpha);	
+}
+
+data.getUsersList=function(){
+	var i;
+	var reponse;
+	if (this.usersList==null) {
+		reponse=manager.getUsersList();
+		if (reponse.state=="success") {
+			this.usersList = reponse.liste;
+			this.processUserList();
+		} else {
+			addAlert("La liste des utilisateurs n'a pas pu être récupérée.",0);
+		}
+	}
+	if (this.usersList!=null) {
+		for (i=0;i<this.usersList.length;i++) {
+			this.usersList[i].rankName = rankName(this.usersList[i].RANK);
+			if ((this.usersList[i].RANK<RANK) || (this.usersList[i].ID==this.user.ID)) { this.usersList[i].editable=true; }
+			if (this.usersList[i].RANK<RANK) { this.usersList[i].deletable=true; }
+			this.usersList[i].shortDate=shortDateFormat(this.usersList[i].DATE);
+		}
+	}
 }
 
 data.getPersonneById=function(idP){
@@ -838,7 +887,7 @@ data.setFilter=function(restoreDefault,parametres){
 		this.filtreV=null;
 		this.filtreR=null;
 		this.filtreE=null;
-		this.filtreMyContribs=null;
+		this.filtreContribsOf=null;
 		this.activeSearch=false;
 	}
 	if (parametres!=null){
@@ -874,7 +923,7 @@ data.applyFilter=function(restoreListe){
 		it=this.listeAAfficher[i];
 		hasPhoto=(it.PHOTO!='');
 		if (	((this.filtreS!=null) && (this.filtreS!=it.SUG)) ||
-				((this.filtreMyContribs!=null) && (data.user.ID!=it.IDA)) ||
+				((this.filtreContribsOf!=null) && (this.filtreContribsOf!=it.IDA)) ||
 				((this.filtreP!=null) && (this.filtreP!=hasPhoto)) ||
 				((this.filtreV!=null) && (this.filtreV!=it.VL)) ||
 				((this.filtreR!=null) && (this.filtreR!=it.IDREGION)) ||
@@ -945,7 +994,7 @@ function checkItemsToMerge(){
 function checkItemsDiff(){
 	var i,j,index;
 	var attrValue, attr,diffFound;
-	var listeAttr=["NOM", "PRENOM", "VILLE", "IDREGION", "DIVERS", "HOBBY", "PHOTO"];
+	var listeAttr=["NOM", "PRENOM", "VILLE", "IDREGION", "DIVERS", "HOBBY", "PHOTO", "IDA"];
 	var reponse;
 	var flagErreur=false;
 	var personneAUpdater;
@@ -959,7 +1008,7 @@ function checkItemsDiff(){
 			index=0;
 			for (j=1;j<mergeItem.liste.length;j++) {
 				if ((attrValue!=mergeItem.liste[j][attr])&&(mergeItem.liste[j][attr]!="")) {
-					if(attrValue=="") {
+					if((attrValue=="")||(attrValue==0)) {
 						attrValue=mergeItem.liste[j][attr];
 						index=j;
 					} else {
@@ -1080,8 +1129,10 @@ var affichage = {
 affichage.displayFilter=function(container){
 	var txtToAppend="";
 	var context={items:[]};
+	var proprieraire;
+
 	
-	if ((data.filtreS!=null)||(data.filtreMyContribs!=null)||(data.filtreP!=null)||(data.filtreV!=null)||(data.filtreR!=null)||(data.filtreE!=null)||(data.activeSearch)){
+	if ((data.filtreS!=null)||(data.filtreContribsOf!=null)||(data.filtreP!=null)||(data.filtreV!=null)||(data.filtreR!=null)||(data.filtreE!=null)||(data.activeSearch)){
 		txtToAppend+="<span class='glyphicon glyphicon-filter'></span>";
 		if (data.filtreS==1) {	context.items.push({className:'label-warning', text:'Non validés', f:'S'}); }
 		else { if(data.filtreS==0) { context.items.push({className:'label-success', text:'Validés', f:'S'}); } }
@@ -1090,7 +1141,20 @@ affichage.displayFilter=function(container){
 		if (data.filtreV==0) {	context.items.push({className:'label-warning', text:'Invisible en ligne', f:'V'}); }
 		else { if(data.filtreV==1) { context.items.push({className:'label-success', text:'Visible en ligne', f:'V'}); }}
 		
-		if (data.filtreMyContribs) { context.items.push({className:'label-info', text:'Mes photos', f:'MC'}); }
+		if (data.filtreContribsOf!=null) {
+			if (data.filtreContribsOf==data.user.ID) {
+				context.items.push({className:'label-info', text:'Mes contributions', f:'C'});
+			} else {
+				if (data.filtreContribsOf>0) { proprietaire=data.getUserById(data.filtreContribsOf); }
+				else { proprietaire=null; }
+				if (proprietaire==null) {
+					context.items.push({className:'label-warning', text:'Origine inconnue', f:'C'});
+				} else {
+					context.items.push({className:'label-info', text:'Contributions de : '+proprietaire.PSEUDO, f:'C'});
+				}				
+			}
+
+		}
 		if (data.filtreR!=null) { context.items.push({className:'label-info', text:data.strFiltreRegion, f:'R'}); }
 		if ((data.filtreE!=null)&&(data.filtreEvent!=null)) {context.items.push({className:'label-info', text:data.filtreEvent.NOM, f:'E'}); }
 		
@@ -1174,6 +1238,7 @@ affichage.liste=function(){
 	var it;
 	var context={};
 	var itToAdd, nouvellePage;
+	var proprietaire;
 
 	this.actif="liste";
 
@@ -1212,14 +1277,28 @@ affichage.liste=function(){
 		it=data.listeAAfficher[i];
 		itToAdd = {ID:it.ID, NOM:it.NOM, PRENOM:it.PRENOM, VILLE:it.VILLE, IDREGION:it.IDREGION, nomRegion:data.getRegionById(it.IDREGION).NOM};
 		if (it.PHOTO!='') { itToAdd.PHOTO=it.PHOTO; }
-		if (it.SUG==1) { itToAdd.SUG=1; }
+		if (it.SUG==1) { itToAdd.className='danger'; }
+		else {
+			if (it.VL==0) { itToAdd.className='warning'; }
+			else { itToAdd.className=''; }
+		}
 		if ((RANK>=RANG_ADMIN)||(it.SUG==1)||(it.IDA==data.user.ID)) { itToAdd.writable=true; }
+		if (RANK>=RANG_ADMIN) {
+			itToAdd.IDA=it.IDA;
+			if (it.IDA!=0) { proprietaire=data.getUserById(it.IDA); } else { proprietaire=null; }
+			if (proprietaire==null) { itToAdd.proprietaire="Inconnu"; }
+			else { itToAdd.proprietaire=proprietaire.PSEUDO; }
+		}
+
+
 		context.personnes.push(itToAdd);
 	}
 
 	//--- Applcation du contexte au template handlebars -------
 	
-	var source   = $("#liste-personne-template").html();
+	var source;
+	if (RANK>=RANG_ADMIN) { source = $("#listeAdmin-personne-template").html(); }
+	else { source = $("#listeUser-personne-template").html(); }
 	var template = Handlebars.compile(source);
 
 	container.empty();
@@ -1229,6 +1308,7 @@ affichage.liste=function(){
 	//--- Création des évènements  -------
 	
 	$("a[name|='affEdit']").bind("click",function(){ choixModifOuAffichage(this.getAttribute('idP')); return false;});
+	$("a[name='prop']").bind("click",function(){ data.setFilter(true,{filtreContribsOf:this.getAttribute('idA')}); data.applyFilter(true); affichage.setPageActive(null); affichage.liste(); return false;});
 	$("a[name|='del']").bind("click",function(){ var id=this.getAttribute('idP'); if (delPersonne(id)) { $("#tr"+id).remove(); } return false;});
 	$("a[name|='region']").bind("click",function(){ var idR=this.getAttribute('idR'); data.setFilter(false,{filtreR:idR}); data.applyFilter(false); affichage.liste(); return false;});
 	$("#pagePrecedente").bind("click",function(){affichage.pageActiveListe--; affichage.liste(); return false;});
@@ -1294,7 +1374,11 @@ affichage.trombinoscope=function(){
 		it=data.listeAAfficher[i];
 		nouvellePersonne={ID:it.ID, NOM:it.NOM, PRENOM:it.PRENOM};
 		if (it.PHOTO!="") { nouvellePersonne.PHOTO=it.PHOTO; }
-		if (it.SUG==1) { nouvellePersonne.SUG=1; }
+		if (it.SUG==1) { nouvellePersonne.className='sug'; }
+		else {
+			if (it.VL==0) { nouvellePersonne.className='nonVL'; }
+			else { nouvellePersonne.className=''; }
+		}
 		nouvelleLigne.personnes.push(nouvellePersonne);
 		if (nouvelleLigne.personnes.length==this.photosParLigne) {
 			context.lignes.push(nouvelleLigne);
@@ -1378,20 +1462,7 @@ affichage.listeUsers=function(page){
 	this.actif="";
 
 	// Acquisition de la liste des personnes ayant fourni leur photo
-	if (data.usersList==null) {
-		reponse=manager.getUsersList();
-		if (reponse.state=="success") {
-			data.usersList = reponse.liste;
-			for (i=0;i<data.usersList.length;i++) {
-				data.usersList[i].rankName = rankName(data.usersList[i].RANK);
-				if ((data.usersList[i].RANK<RANK) || (data.usersList[i].ID==data.user.ID)) { data.usersList[i].editable=true; }
-				if (data.usersList[i].RANK<RANK) { data.usersList[i].deletable=true; }
-				data.usersList[i].shortDate=shortDateFormat(data.usersList[i].DATE);
-			}
-		} else {
-			addAlert("La liste des utilisateurs n'a pas pu être récupérée.",0);
-		}
-	}
+	data.getUsersList();
 	if (data.usersList!=null) {
 		// Préparation du contexte
 		N=data.usersList.length;
@@ -1551,23 +1622,27 @@ manager.delPersonne=function(id){
 	return this.post('./php/delPersonne.php',{id:id});
 }
 
-// Modifie le compte dans la BDD
-manager.modMonCompte=function(newPwd,email){
-	return this.post('./php/modMonCompte.php',{pwd:MD5(PWD_SEED+newPwd),email:email});
-}
-
 // ajoute ou modifie un compte en BDD
-manager.addModUser=function(pseudo, email, pwd, rank, id){
-	var params={pseudo:pseudo, email:email, pwd:pwd, id:id};
-	if (rank!=0) { params.rank=rank; }
-	return this.post('./php/addModUser.php',params);
+manager.addModUser=function(pseudo, email, pwd, rank, idU, key, nomPrenom){
+	var params={};
+	if (pseudo!=null) { params.pseudo=pseudo; }
+	if (email!=null) { params.email=email; }
+	if (pwd!=null) { params.pwd=pwd; }
+	if (rank!=null) { params.rank=rank; }
+	if (key!=null) { params.key=key; }
+	if (nomPrenom!=null) { params.nomPrenom=nomPrenom; }
+	if (idU!=-1) {
+		params.idU=idU;
+		return this.post('./php/modUser.php',params);
+	} else {
+		return this.post('./php/addUser.php',params);
+	}
 }
 
 // Suppression utilisateur en BDD
 manager.delUser=function(id){
 	return this.post('./php/delUser.php',{id:id});
 }
-
 
 // Demande la liste des personnes avec photo
 manager.getListeAP=function(){

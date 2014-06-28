@@ -1,0 +1,14 @@
+﻿<?php
+	define("TIME_OUT",5000);
+	define("RANG_SUPER_ADMIN", 100);
+	define("RANG_ADMIN", 50);
+	define("RANG_PRIVILEGED_USER",30);
+	define("RANG_USER", 20);
+	define("RANG_VISITOR", 10);
+	define("RANG_WAITING_USER", 5);
+
+	// Zone de configuration
+	define("PWD_SEED", "");						// Base pour les mots de passes
+	define("CREATE_USER_KEY", "");				// Clé permettant la création d'un utilisateur
+	define("PSEUDO_MIN_LENGTH", 6);				// Longueur minimale d'un pseudo
+?>

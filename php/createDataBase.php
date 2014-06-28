@@ -36,6 +36,7 @@ $createPersonnesTable = $connexion->prepare("CREATE TABLE IF NOT EXISTS `".$pref
 $createUsersTable = $connexion->prepare("CREATE TABLE IF NOT EXISTS `".$prefixeDB."users` (
 	`ID` int(11) NOT NULL AUTO_INCREMENT,
 	`PSEUDO` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+	`NOMPRENOM` text NOT NULL,
 	`PWD` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 	`EMAIL` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
 	`RANK` tinyint(4) NOT NULL,

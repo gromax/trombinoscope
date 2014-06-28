@@ -11,6 +11,11 @@ p {margin:2px;}
 	height:auto;
 }
 
+.imgTrombi{
+	width:150px;
+	height:200px;
+}
+
 .frameLoad{ /* frame pour le retour du file input */
 	visibility:hidden;
 	height:0px;
@@ -21,6 +26,14 @@ p {margin:2px;}
 	position:absolute;
 	left:100px;
 	top:50px;
+}
+
+.sug{/* pour l'affichage des personnes non encore validées */
+	background-color: #f2dede;
+}
+
+.nonVL{ /* pour l'affichage des personnes qui ont choisi de ne pas être visibles en ligne */
+	background-color: #fcf8e3;
 }
 
 .filtres{

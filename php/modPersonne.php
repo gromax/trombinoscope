@@ -67,6 +67,10 @@
 				$requete=$requete." DIVERS=:divers,";
 				$params['divers']=$_POST['DIVERS'];
 			}
+			if(isset($_POST['IDA']) && (RANK>=RANG_ADMIN)) {
+				$requete=$requete." IDA=:ida,";
+				$params['ida']=$_POST['IDA'];
+			}
 			if ($requete!='') {
 				// Il y a donc une modification à faire
 				if ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) {

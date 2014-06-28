@@ -8,7 +8,7 @@
 	// Il faut être administrateur
 	if (author("getUsersList",null)){
 		require_once('./conx/connexion.php');
-		$select = $connexion->prepare('SELECT ID, PSEUDO, EMAIL, DATE, HEURE, RANK FROM '.$prefixeDB.'users ORDER BY RANK DESC, PSEUDO ASC;');
+		$select = $connexion->prepare('SELECT ID, PSEUDO, EMAIL, NOMPRENOM, DATE, HEURE, RANK FROM '.$prefixeDB.'users ORDER BY RANK DESC, PSEUDO ASC;');
 		$jsonData='';
 		$select->execute();
 		while( $user = $select->fetch(PDO::FETCH_ASSOC) ) { // on récupère la liste des membres
