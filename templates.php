@@ -8,7 +8,7 @@
 		Laissez le mot de passe vide pour ne pas le changer.
 	</div>
 	<form class='form-horizontal' role='form' id='modMonCompte'>
-		<div class='form-group'><label class='col-sm-2 control-label' for='inputNomPrenom'>Nom et prénom</label><div class='col-sm-6'><input type='text' class='form-control' id='inputNomPrenom' placeholder='Entrez un nom et un prénom' value='{{NOMPRENOM}}'></div></div>
+		<div class='form-group'><label class='col-sm-2 control-label' for='inputNomPrenom'>Prénom et nom</label><div class='col-sm-6'><input type='text' class='form-control' id='inputNomPrenom' placeholder='Entrez un nom et un prénom' value='{{NOMPRENOM}}'></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='inputEmail'>Email</label><div class='col-sm-6'><input type='text' class='form-control' id='inputEmail' placeholder='Entrez un email' value='{{EMAIL}}'></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd1'>Nouveau mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd1' placeholder='Mot de passe' value=''></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd2'>Confirmation du mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd2' placeholder='Confirmez' value=''></div></div>
@@ -26,7 +26,8 @@
 				<li>Au moins 6 caractères pour le <b>pseudo</b>. Attention, la casse (majuscule / minuscule) est prise en compte !</li>
 				<li>L&apos;<b>email</b> n&apos;est pas obligatoire.</li>
 				<li>Le <b>mot de passe</b> n&apos;apparaît pas en clair dans la base de donnée.</li>
-				<li>Merci de préciser <b>nom et prénom</b> pour permettre de vous identifier.</li>
+				<li>Merci de préciser <b>prénom et nom</b> pour permettre de vous identifier.<br/>
+				 <i>surtout pour ceux dont le pseudo et l&apos;email ne donnent pas d&apos;indice !</i></li>
 				<li>La <b>clé</b> permettant la création a dû vous être fourni.</li>
 			</ul>
 		</div>
@@ -39,7 +40,7 @@
 	{{/if}}
 	<form class='form-horizontal' role='form' id='addModUser'>
 		<div class='form-group'><label class='col-sm-2 control-label' for='inputPseudo'>Pseudo</label><div class='col-sm-6'><input type='text' class='form-control' id='inputPseudo' placeholder='Entrez un pseudo' value='{{PSEUDO}}'></div></div>
-		<div class='form-group'><label class='col-sm-2 control-label' for='inputNomPrenom'>Nom et prénom</label><div class='col-sm-6'><input type='text' class='form-control' id='inputNomPrenom' placeholder='Entrez un nom et un prénom' value='{{NOMPRENOM}}'></div></div>
+		<div class='form-group'><label class='col-sm-2 control-label' for='inputNomPrenom'>Prénom et nom</label><div class='col-sm-6'><input type='text' class='form-control' id='inputNomPrenom' placeholder='Entrez un nom et un prénom' value='{{NOMPRENOM}}'></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='inputEmail'>Email</label><div class='col-sm-6'><input type='text' class='form-control' id='inputEmail' placeholder='Entrez un email' value='{{EMAIL}}'></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd1'>Mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd1' placeholder='Mot de passe' value=''></div></div>
 		<div class='form-group'><label class='col-sm-2 control-label' for='pwd2'>Confirmation du mot de passe</label><div class='col-sm-4'><input type='password' class='form-control' id='pwd2' placeholder='Confirmez' value=''></div></div>
