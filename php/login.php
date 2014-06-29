@@ -14,7 +14,6 @@
 			$_SESSION['RANKtrombi']=$personne['RANK'];
 			$_SESSION['last_access']=time();
 			$_SESSION['ipaddr']=$_SERVER['REMOTE_ADDR'];
-			$_SESSION['mySugs']=array();
 
 			// On envoie une requête pour indiquer l'heure de la dernière connexion
 			$lastConnect = $connexion->prepare('UPDATE '.$prefixeDB.'users SET DATE=:date, HEURE=:heure WHERE ID=:id;');

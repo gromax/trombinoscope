@@ -15,7 +15,7 @@
 			require_once('./conx/connexion.php');
 			// Dans le cas d'une modification par user ou waiting_user, on veut vérifier
 			// que le compte est bien propriétaire de l'item à modifier
-			if ((RANK==RANG_WAITING_USER)||(RANK==RANG_USER)) {
+			if ((RANK==RANG_WAITING_USER)||(RANK==RANG_USER)||(RANK==RANG_PRIVILEGED_USER)) {
 				$select=$connexion->prepare('SELECT COUNT(*) FROM '.$prefixeDB.'personnes WHERE ID=:id AND IDA=:idA;');
 				$select->execute(array('id'=>$id, 'idA'=>$_SESSION['IDtrombi']));
 				if ($select->fetchColumn()=='0') die('({state:"failed",error:"You are not owner of this item"})');
@@ -73,7 +73,7 @@
 			}
 			if ($requete!='') {
 				// Il y a donc une modification à faire
-				if ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) {
+				if ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)||(RANK==RANG_PRIVILEGED_USER)) {
 					$params['ida']=$_SESSION['IDtrombi'];
 					$modPersonne = $connexion->prepare('UPDATE '.$prefixeDB.'personnes SET '.$requete.' DATE=:date, HEURE=:heure WHERE ID=:id AND IDA=:ida');
 				} else {

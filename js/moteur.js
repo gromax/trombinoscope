@@ -7,24 +7,18 @@
 function init(){
 	if (RANK>0){ // Cas connecté
 		data.load();
-		data.applyFilter(true);
+		data.applyFilter();
 		if (RANK>=RANG_VISITOR) {
 			if (data.evenements.length>0) {
 				data.lastEventID=data.evenements[data.evenements.length-1].ID;
 				data.setFilter(true,{filtreE:data.lastEventID});
 			} else data.setFilter(true,null);
-			data.applyFilter(true);
+			data.applyFilter();
 			affichage.setPageActive(null);
 			affichage.trombinoscope();
 		} else {
 			// C'est donc un utilisateur en attente
-			if (data.personnes.length>0) {
-				data.setFilter(true,null);
-				data.applyFilter(true);
-				affichage.trombinoscope();
-			} else {
-				accueilWaitingUser();
-			}
+			goHome();
 		}
 	}
 }
@@ -50,6 +44,13 @@ function rankName(rank){
 // Interface
 //-----------------------------
 
+// Affiche un écran d'accueil
+function goHome(){
+	if (RANK==RANG_PRIVILEGED_USER) { accueilUser(); }
+	if (RANK==RANG_USER) { accueilUser(); }
+	if (RANK==RANG_WAITING_USER) { accueilWaitingUser(); }
+}
+
 // Ecran d'accueil pour un utilisateur en attente
 function accueilWaitingUser(){
 	var container=$("#mainContent");
@@ -59,7 +60,34 @@ function accueilWaitingUser(){
 	var template = Handlebars.compile(source);
 	container.append(template());
 	$("a[name='addPerson']").bind("click",function() { afficherFormulaireModificationPersonne(-1); });
+	$("a[name='mesPhotos']").bind("click",function() { data.setFilter(true,{filtreContribsOf:data.user.ID}); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); });
+	$("a[name='monCompte']").bind("click",function() { modifMonCompteForm(); });
+	$("a[name='btnInfo']").bind("click",information);
+}
 
+// Ecran d'accueil pour un utilisateur (privilégié ou pas)
+function accueilUser(){
+	var container=$("#mainContent");
+	container.empty();
+		
+	var source   = $("#accueil-user").html();
+	var template = Handlebars.compile(source);
+	container.append(template());
+	$("a[name='trombi']").bind("click",function() { trombinoscopeButtonClick(); });
+	$("a[name='addPerson']").bind("click",function() { afficherFormulaireModificationPersonne(-1); });
+	$("a[name='mesPhotos']").bind("click",function() { data.setFilter(true,{filtreContribsOf:data.user.ID}); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); });
+	$("a[name='monCompte']").bind("click",function() { modifMonCompteForm(); });
+	$("a[name='btnInfo']").bind("click",information);
+}
+
+// Ecran d'information
+function information(){
+	var container=$("#mainContent");
+	container.empty();
+		
+	var source   = $("#information").html();
+	var template = Handlebars.compile(source);
+	container.append(template());
 }
 
 // Réponse à un click sur le bouton "Trombinoscope" de la bannière
@@ -68,20 +96,14 @@ function trombinoscopeButtonClick(){
 		affichage.setPageActive(null);
 		if (data.lastEventID!=null) {
 			data.setFilter(true,{filtreE:data.lastEventID});
-			data.applyFilter(true);
+			data.applyFilter();
 		}
 		affichage.trombinoscope();
 	} else {
-		if (RANK=RANG_WAITING_USER) {
-			// Permet de voir ses propres photos
-			if (data.personnes.length>0) {
-				data.setFilter(true,null);
-				data.applyFilter(true);
-				affichage.trombinoscope();
-			}
-		}
+		goHome();
 	}
 }
+
 
 // Demande de modification ou ajout d'un utilisateur
 function addModUser(id){
@@ -196,9 +218,10 @@ function modifMonCompteForm(){
 	var source   = $("#mod-monCompte-template").html();
 	var template = Handlebars.compile(source);
 	affichage.actif="";
-	var context={PSEUDO:data.user.PSEUDO, EMAIL:data.user.EMAIL, NOMPRENOM:data.user.NOMPRENOM};
+	var context={PSEUDO:data.user.PSEUDO, EMAIL:data.user.EMAIL, NOMPRENOM:data.user.NOMPRENOM, userType:rankName(RANK)};
 	container.append(template(context));
 	$('#modMonCompte').submit(function(){ doModMonCompte(); return false; });
+	$("a[name='userType']").bind("click",information);
 }
 
 // Validation du formulaire précédent
@@ -263,7 +286,7 @@ function delFilter(f) {
 
 	$("span[name='bf-"+f+"']").remove();
 	data.setFilter(false,filter);
-	data.applyFilter(true);
+	data.applyFilter();
 	switch(affichage.actif) {
 		case "liste" : affichage.liste(); break;
 		case "trombinoscope" : affichage.trombinoscope(); break;
@@ -347,7 +370,7 @@ function afficherListeEvenements(){
 	if (RANK>=RANG_ADMIN) {
 		$("a[name|='edit']").bind("click",function(){afficherFormModificationEvenement(this.getAttribute("idE")); return false; });
 	}
-	$("a[name|='trombi']").bind("click",function(){data.setFilter(true,{filtreE:this.getAttribute("idE")}); data.applyFilter(true); affichage.setPageActive(null); affichage.trombinoscope(); return false;});
+	$("a[name|='trombi']").bind("click",function(){data.setFilter(true,{filtreE:this.getAttribute("idE")}); data.applyFilter(); affichage.setPageActive(null); affichage.trombinoscope(); return false;});
 }
 
 //------------------------------
@@ -476,7 +499,7 @@ function validerFormulaireModificationPersonne(id){
 	if (reponse.state=="success") {
 		if (id==-1) {
 			parametres.ID=reponse.insertedID;
-			if ((RANK==RANG_USER)||(RANK=RANG_WAITING_USER)) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
+			if ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK=RANG_WAITING_USER)) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
 			data.addPersonne(parametres);
 			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été ajouté(e).",1);
 		} else {
@@ -534,7 +557,7 @@ function delPersonne(id,force){
 				data.supprimerLiensDePersonne(personne);
 			}
 			if (reponse.state=="success"){
-				data.personnes.splice(data.personnes.indexOf(personne),1);
+				data.delPersonne(personne);
 				addAlert("<i>"+personne.PRENOM+" "+personne.NOM+"</i> a bien été supprimé(e).",1);
 				return true;
 			}
@@ -641,7 +664,6 @@ var data = {
 	activeSearch:false, // Indique si une recherche est en cours
 	strSearch:'', // Chaîne sur laquelle la recherche a été faite
 	listeAAfficher:[], // Liste des éléments à afficher
-	pAP:null // liste des personnes ayant fourni leur photo (pour l'interface réduite)
 }
 
 data.load=function(){
@@ -813,10 +835,15 @@ data.addPersonne=function(submitedPersonne){
 	submitedPersonne.MAJ2=majSansAccent(submitedPersonne.PRENOM+submitedPersonne.NOM);
 	submitedPersonne.DATE=getDate();
 	submitedPersonne.HEURE=getTime();
-	submitedPersonne.SUG = RANK>=RANG_ADMIN ? 0 : 1;
+	if (RANK>=RANG_ADMIN) { submitedPersonne.SUG = 0; } else { submitedPersonne.SUG=1; }
 	submitedPersonne.PHOTO='';
 	this.personnes.push(submitedPersonne);
 	this.personnes.sort(comparePersonnesAlpha);
+	// Si la personne ajoutée correspond aux critères du filtre actif, on peut l'ajouter à la liste
+	if (this.personneTroughFilter(submitedPersonne)) {
+		this.listeAAfficher.push(submitedPersonne);
+		this.listeAAfficher.sort(comparePersonnesAlpha);
+	}
 }
 
 // Modifie une personne - ID requis
@@ -840,6 +867,9 @@ data.delPersonne=function(personne){
 	if (personne!=null) {
 		index=this.personnes.indexOf(personne);
 		if (index!=-1) { this.personnes.splice(index,1); }
+		// Cette personne est peut être aussi fans la liste à afficher et il faut l'en supprimer
+		index=this.listeAAfficher.indexOf(personne);
+		if (index!=-1) { this.listeAAfficher.splice(index,1); }
 	}
 }
 
@@ -863,18 +893,14 @@ data.supprimerLiensDePersonne=function(personne){
 
 // Filtrage selon la recherche
 data.filtrerSelonRecherche=function(str){
-	var i;
-	str=trim(str);
+	str=majSansAccent(trim(str));
 	if (str!=''){
-		this.setFilter(true,null);
 		this.activeSearch=true;
 		this.strSearch=str;
-		str=majSansAccent(str);
-		this.listeAAfficher.length=0;
-		for(i=0;i<this.personnes.length;i++){
-			if((this.personnes[i].MAJ.search(str) !== -1)||(this.personnes[i].MAJ2.search(str) !== -1))  this.listeAAfficher.push(this.personnes[i]);
-		}
+	} else {
+		this.activeSearch=false;
 	}
+	this.applyFilter();
 }
 
 // Enregistre les nouveaux paramètres de filtrage
@@ -906,33 +932,32 @@ data.setFilter=function(restoreDefault,parametres){
 
 // Effectue un filtrage en fonction du filtre actif
 // L'argument indique s'il faut commencer le filtrage avec la totalité des personnes
-data.applyFilter=function(restoreListe){
+data.applyFilter=function(){
 	var i;
-	var it;
 	var hasPhoto;
 	
-	if (restoreListe){
-		this.listeAAfficher.length=0;
-		for (i=0;i<this.personnes.length;i++) {
+	this.listeAAfficher.length=0;
+	for (i=0;i<this.personnes.length;i++) {
+		if (this.personneTroughFilter(this.personnes[i])) {
 			this.listeAAfficher.push(this.personnes[i]);
 		}
 	}
-	
-	i=0;
-	while (i<this.listeAAfficher.length){
-		it=this.listeAAfficher[i];
-		hasPhoto=(it.PHOTO!='');
-		if (	((this.filtreS!=null) && (this.filtreS!=it.SUG)) ||
-				((this.filtreContribsOf!=null) && (this.filtreContribsOf!=it.IDA)) ||
-				((this.filtreP!=null) && (this.filtreP!=hasPhoto)) ||
-				((this.filtreV!=null) && (this.filtreV!=it.VL)) ||
-				((this.filtreR!=null) && (this.filtreR!=it.IDREGION)) ||
-				((this.filtreE!=null) && (it.liens.indexOf(this.filtreEvent)==-1)) ) {
-			this.listeAAfficher.splice(i,1);
-		} else {
-			i++;
-		}
-	}
+}
+
+// Renvoie vrai si une personne remplit les conditions de filtrage
+// Faux sinon
+data.personneTroughFilter=function(personne){
+	var hasPhoto=(personne.PHOTO!='');
+	if (	((this.filtreS!=null) && (this.filtreS!=personne.SUG)) ||
+			((this.filtreContribsOf!=null) && (this.filtreContribsOf!=personne.IDA)) ||
+			((this.filtreP!=null) && (this.filtreP!=hasPhoto)) ||
+			((this.filtreV!=null) && (this.filtreV!=personne.VL)) ||
+			((this.filtreR!=null) && (this.filtreR!=personne.IDREGION)) ||
+			((this.filtreE!=null) && (personne.liens.indexOf(this.filtreEvent)==-1)) ||
+			((this.activeSearch) && (personne.MAJ.search(this.strSearch)==-1) && (personne.MAJ2.search(this.strSearch)==-1))
+		) {
+		return false;
+	} else { return true; }
 }
 
 // Renvoie la personne suivante dans la liste
@@ -1199,6 +1224,7 @@ affichage.personne=function(id){
 		context.affCommandes=true;
 		if (personne.PHOTO!='') { context.PHOTO=personne.PHOTO; }
 		context.REGION=data.getRegionById(personne.IDREGION).NOM;
+		context.IDR=personne.IDREGION;
 
 		context.evenements=[];
 		for (i=0;i<data.evenements.length;i++) {
@@ -1222,11 +1248,13 @@ affichage.personne=function(id){
 		$('#retourButton').bind("click", function() { affichage.setPageActive(this.getAttribute("idP")); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
 		$("a[name|='evenement']").bind("click",function(){
 			data.setFilter(true,{filtreE:this.getAttribute("idE")});
-			data.applyFilter(true);
+			data.applyFilter();
 			affichage.setPageActive(this.getAttribute("idP"));
 			if (affichage.retourSurListe) { affichage.liste(); }
 			else {affichage.trombinoscope(); }
 		});
+		$("a[name='region']").bind("click",function(){ var idR=this.getAttribute('idR'); data.setFilter(false,{filtreR:idR}); data.applyFilter(); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
+
 	}
 }
 
@@ -1308,9 +1336,9 @@ affichage.liste=function(){
 	//--- Création des évènements  -------
 	
 	$("a[name|='affEdit']").bind("click",function(){ choixModifOuAffichage(this.getAttribute('idP')); return false;});
-	$("a[name='prop']").bind("click",function(){ data.setFilter(true,{filtreContribsOf:this.getAttribute('idA')}); data.applyFilter(true); affichage.setPageActive(null); affichage.liste(); return false;});
+	$("a[name='prop']").bind("click",function(){ data.setFilter(true,{filtreContribsOf:this.getAttribute('idA')}); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); return false;});
 	$("a[name|='del']").bind("click",function(){ var id=this.getAttribute('idP'); if (delPersonne(id)) { $("#tr"+id).remove(); } return false;});
-	$("a[name|='region']").bind("click",function(){ var idR=this.getAttribute('idR'); data.setFilter(false,{filtreR:idR}); data.applyFilter(false); affichage.liste(); return false;});
+	$("a[name|='region']").bind("click",function(){ var idR=this.getAttribute('idR'); data.setFilter(false,{filtreR:idR}); data.applyFilter(); affichage.liste(); return false;});
 	$("#pagePrecedente").bind("click",function(){affichage.pageActiveListe--; affichage.liste(); return false;});
 	$("#pageSuivante").bind("click",function(){affichage.pageActiveListe++; affichage.liste(); return false;});
 	$("a[name|='page']").bind("click",function(){ affichage.pageActiveListe=this.getAttribute('index'); affichage.liste(); return false;});
@@ -1404,49 +1432,6 @@ affichage.trombinoscope=function(){
 	$("#pagePrecedente").bind("click",function(){affichage.pageActiveTrombi--; affichage.trombinoscope(); return false;});
 	$("#pageSuivante").bind("click",function(){affichage.pageActiveTrombi++; affichage.trombinoscope(); return false;});
 	$("a[name|='page']").bind("click",function(){ affichage.pageActiveTrombi=this.getAttribute('index'); affichage.trombinoscope(); return false;});
-	
-	
-}
-
-// Fonction qui affiche simplement la liste de ceux dont on a déjà la photo
-affichage.personnesAvecPhoto=function(page){
-	page = typeof page !== 'undefined' ? page : 0;
-	var i;
-	var container=$("#mainContent");
-	var context={};
-	var N;
-	var nPage;
-	
-	this.actif="";
-
-	// Acquisition de la liste des personnes ayant fourni leur photo
-	manager.getListeAP();
-	if (data.pAP!=null) {
-		// Préparation du contexte
-		N=data.pAP.length;
-		if (page*this.itemsParPage>N) { page=0; }
-		context.personnes=[];
-		for (i=page*this.itemsParPage;i<Math.min(N,(page+1)*this.itemsParPage);i++) { context.personnes.push(data.pAP[i]); }
-		if (this.itemsParPage<N) {	// création de la pagination
-			context.pages=[];
-			for (i=0;i<=Math.floor(N/this.itemsParPage);i++) {
-				nPage={index:i};
-				if (i==page) { nPage.active=true; }
-				context.pages.push(nPage);
-			}
-		}
-		
-		// Application du context au template handlebars
-		
-		var source   = $("#listeAvecPhoto-personne-template").html();
-		var template = Handlebars.compile(source);
-		container.empty();
-		container.append(template(context));
-		
-		// Création des évènements
-		$("a[name|='page']").bind("click",function(){ affichage.personnesAvecPhoto(this.getAttribute('index')); return false;});
-
-	}
 }
 
 // Fonction qui affiche simplement la liste de ceux dont on a déjà la photo
@@ -1489,7 +1474,7 @@ affichage.listeUsers=function(page){
 		$("a[name|='edit']").bind("click",function(){ addModUser(this.getAttribute('idU')); return false;});
 		$("a[name|='del']").bind("click",function(){ delUser(this.getAttribute('idU')); return false;});
 		$("a[name='addU']").bind("click",function(){ addModUser(-1); return false;});
-
+		$("a[name='photos']").bind("click",function(){ data.setFilter(true,{filtreContribsOf:this.getAttribute('idU')}); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); return false;});
 	}
 }
 
@@ -1642,22 +1627,6 @@ manager.addModUser=function(pseudo, email, pwd, rank, idU, key, nomPrenom){
 // Suppression utilisateur en BDD
 manager.delUser=function(id){
 	return this.post('./php/delUser.php',{id:id});
-}
-
-// Demande la liste des personnes avec photo
-manager.getListeAP=function(){
-	var reponse;
-	var i;
-	if (data.pAP==null) {
-		reponse=this.get("./php/personnesAvecPhoto.php",null);
-		if (reponse.state=='success') {
-			data.pAP=reponse.liste;
-			for (i=0;i<data.pAP.length;i++) {
-				data.pAP[i].DATE=shortDateFormat(data.pAP[i].DATE);
-			}
-		}
-		else { addAlert("Échec du chargement de la liste.",0); }
-	}
 }
 
 // Validation d'une personne

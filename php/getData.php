@@ -16,7 +16,7 @@
 
 		$visibles=array(); // Enregistre les personnes visibles
 		if (RANK>=RANG_ADMIN) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes ORDER BY NOM, PRENOM ASC;');
-		elseif (RANK==RANG_PRIVILEGED_USER) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE SUG=0 OR IDA='.$_SESSION['IDtrombi'].' ORDER BY NOM, PRENOM ASC;');
+		elseif (RANK==RANG_PRIVILEGED_USER) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes ORDER BY NOM, PRENOM ASC;');
 		elseif (RANK==RANG_USER) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) OR IDA='.$_SESSION['IDtrombi'].' ORDER BY NOM, PRENOM ASC;');
 		elseif (RANK==RANG_VISITOR) $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, SUG, DIVERS, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE ( VL=1 AND SUG=0 ) ORDER BY NOM, PRENOM ASC;');
 		else $selectPersonnes = $connexion->prepare('SELECT ID, IDREGION, NOM, PRENOM, VILLE, HOBBY, VL, EP, DIVERS, SUG, DATE, HEURE, PHOTO, IDA FROM '.$prefixeDB.'personnes WHERE IDA='.$_SESSION['IDtrombi'].' ORDER BY NOM, PRENOM ASC;');

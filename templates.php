@@ -3,6 +3,7 @@
 <!-- modification de mon compte -->
 <script id="mod-monCompte-template" type="text/x-handlebars-template">
 	<h1 class='text-info'>Modifier mon compte : {{PSEUDO}}</h1>
+	<p>Vous êtes un <a href='#' name='userType'><b>{{userType}}</b></a></p>
 	<div class="alert alert-info alert-dismissible" role="alert">
 		<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
 		Laissez le mot de passe vide pour ne pas le changer.
@@ -298,7 +299,7 @@
 		<h3>{{PRENOM}} {{NOM}}</h3>
 		<dl class="dl-horizontal">
 		  <dt>Ville</dt><dd>{{VILLE}}</dd>
-		  <dt>Région</dt><dd>{{REGION}}</dd>
+		  <dt>Région</dt><dd><a href='#' name='region' idR={{IDR}}>{{REGION}}</a></dd>
 		  <dt>Hobbys</dt><dd>{{HOBBY}}</dd>
 		</dl>
 	</div>
@@ -429,37 +430,6 @@
 	</div>
 </script>
 
-<!-- Liste des personnes ayant déjà fourni leur photo -->
-<script id="listeAvecPhoto-personne-template" type="text/x-handlebars-template">
-	<h1 class='text-info'>Liste des personnes ayant déjà fourni une photo</h1>
-	<p>Inscrivez vous tout de même pour nous dire que vous venez en 2014, vous pourrez dans le même temps changer votre photo. Si vous souhaitez qu&apos;on efface votre photo, envoyez-nous un mail !</p>
-	{{#if pages}}
-	<div>
-		<ul class='pagination'>
-			{{#each pages}}
-				{{#if this.active}}
-					<li class='active'><a href='#'>{{this.index}}<span class='sr-only'>(current)</span></a></li>
-				{{else}}
-					<li><a href='#' name='page-{{this.index}}' index={{this.index}}>{{this.index}}</a></li>
-				{{/if}}
-			{{/each}}
-		</ul>
-	</div>
-	{{/if}}
-
-	<table class='table table-bordered table-striped'>
-	<tr><th>Nom</th><th>Prénom</th><th>Ville</th><th>Mis à jour</th></tr>
-	{{#each personnes}}
-		<tr>
-		<td>{{this.NOM}}</td>
-		<td>{{this.PRENOM}}</td>
-		<td>{{this.VILLE}}</td>
-		<td>{{this.DATE}}</td>
-		</tr>
-	{{/each}}
-	</table>
-</script>
-
 <!-- Liste des utilisateurs -->
 <script id="liste-users-template" type="text/x-handlebars-template">
 	<h1 class='text-info'>Liste des utilisateurs</h1>
@@ -481,7 +451,7 @@
 	<thead><tr>
 		<th width=16></th>
 		<th width=16><a href='#' name='addU'><span class='glyphicon glyphicon-plus'></span></a>
-		</th><th>PSEUDO</th><th>Nom/Prénom</th><th>EMAIL</th><th>RANG</th><th>Connexion</th>
+		<th width=16></th></th><th>PSEUDO</th><th>Nom/Prénom</th><th>EMAIL</th><th>RANG</th><th>Connexion</th>
 	</tr></thead>
 	<tbody>
 	{{#each users}}
@@ -496,6 +466,7 @@
 			<a href='#' name='del-{{this.ID}}' idU={{this.ID}} ><span class='glyphicon glyphicon-trash'></span></a>
 		{{/if}}
 		</td>
+		<td><a href='#' name='photos' idU={{this.ID}} ><span class='glyphicon glyphicon-camera'></span></a></td>
 		<td>{{this.PSEUDO}}</td>
 		<td>{{this.NOMPRENOM}}</td>
 		<td>{{this.EMAIL}}</td>
@@ -554,10 +525,65 @@
 	</div>
 </script>
 
+<!-- Panneau d'accueil pour un utilisateur en attente -->
 <script id="accueil-waiting-user" type="text/x-handlebars-template">
 	<div class="jumbotron">
 		<h1>Bienvenue !</h1>
 		<p>Vous pouvez maintenant ajouter des personnes avec leurs photos. Une seule personne peut inscrire toute sa famille, tous ses invités.</p>
-		<p><a name='addPerson' class="btn btn-primary btn-lg" role="button">Ajouter une personne</a></p>
+		<p>
+			<a name='addPerson' class="btn btn-primary btn-lg" role="button">Ajouter une photo</a>
+			<a name='mesPhotos' class="btn btn-primary btn-lg" role="button">Voir mes photos</a>
+			<a name='monCompte' class="btn btn-primary btn-lg" role="button">Modifier mon compte <span class="glyphicon glyphicon-user"></span></a>
+		</p>
 	</div>
+	<a href='#' name='btnInfo'>fonctionnement du site</a>
+</script>
+
+<!-- Panneau d'accueil pour un utilisateur (privilégié ou pas) -->
+<script id="accueil-user" type="text/x-handlebars-template">
+	<div class="jumbotron">
+		<h1>Bienvenue !</h1>
+		<p>Vous pouvez maintenant consulter le trombinoscope ou	ajouter des personnes avec leurs photos. Une seule personne peut inscrire toute sa famille, tous ses invités.</p>
+		<p>
+			<a name='trombi' class="btn btn-primary btn-lg" role="button">Voir le trombinoscope</a>
+			<a name='addPerson' class="btn btn-primary btn-lg" role="button">Ajouter une photo</a>
+			<a name='mesPhotos' class="btn btn-primary btn-lg" role="button">Voir mes photos</a>
+			<a name='monCompte' class="btn btn-primary btn-lg" role="button">Modifier mon compte <span class="glyphicon glyphicon-user"></span></a>
+		</p>
+	</div>
+	<a href='#' name='btnInfo'>fonctionnement du site</a>
+</script>
+
+<!-- Panneau d'information sur la politique du site -->
+<script id="information" type="text/x-handlebars-template">
+	<h1>Gestion des informations</h1>
+	<h4>Les comptes utilisateurs</h4>
+	<ul>
+		<li>Un nouvel utilisateur est invité à choisir un <b>pseudo</b> et un <b>mot de passe</b>.</li>
+		<li>Ils peuvent préciser leur nom et leur prénom pour faciliter leur identification.</li>
+		<li>Ils peuvent préciser un email pour faciliter le dialogue.</li>
+		<li>Les administrateurs sont seuls à pouvoir voir toutes ces informations, mais ils ne peuvent pas connaître le mot de passe des utilisateurs qui sont cryptés en base de données.</li>
+		<li>Un utilisateur peut changer ses données et son mot de passe, mais pas son pseudo. Il peut toutefois demander à un administrateur de le faire pour lui.</li>
+		<li>Un utlilsateur ne peut pas éffacer son compte, mais il peut demander à un administeur de le faire pour lui.</li>
+		<li>Quand un utilisateur se connecte, on enregistre en base de données l&apos;heure de sa dernière connexion.</li>
+	</ul>
+	<h4>Les photos et informations sur les personnes</h4>
+	<ul>
+		<li>Lorsqu&apos;un utilisateur créée une nouvelle photo, on demande au minimum un <b>nom</b> et un <b>prénom</b>.</li>
+		<li>L&apos;utilisateur est libre de préciser en plus une <b>ville</b>, une <b>région</b>, des <b>hobbys</b> et toutes informations <b>diverses</b>.</li>
+		<li>Le trombinoscope ayant comme première vocation d&apos;être sur papier, les utilisateurs sont libres de demander que leur(s) photo(s) n&apos;apparaisse(nt) pas en ligne.</li>
+		<li>Pour chacune de ses photos, un utilisateur peut préciser s&apos;il souhaite qu&apos;elle soit éffacée après le déroulement de l&apos;évènement pour lequel il l&apos;a créée. Les photos et informations concernées seront éffacées par un administrateur après l&apos;évènement.</li>
+		<li>Un utlisateur est libre de modifier toute information sur les éléments qu&apos;il a créés. Il peut aussi tout supprimer. Aucun archive n&apos;est conservé, une suppression est donc définitive.</li>
+		<li>Lors d&apos;un nouvel ajout, une photo est soumise à une modération a priori. La photo doit être validée par un administrateur.</li>
+		<li>Quand une photo est validée, toute modification a un effet immédiat, sans modération.</li>
+	</ul>
+	<h4>Les différents types d&apos;utilisateurs.</h4>
+	<ul>
+		<li>Le <b>super-administrateur</b> a les mêmes droits qu&apos;administeur, avec en plus la possibilité de promouvoir des administrateurs. Ce compte est unique.</li>
+		<li>Un <b>administrateur</b> voit toutes les photos, validées ou pas. Il a le droit de les modifier ainsi que les informations jointes. Il peut créer tout type d&apos;utilisateur et de les modifier.</li>
+		<li>Un <b>utlisateur privilégié</b> a les mêmes droits qu&apos;un utilisateur ordinaire mais il peut voir toutes les photos, validées ou pas. Ce compte est destiné à des organisateurs qui ont besoin de récupérer des photos.</li>
+		<li>Un <b>utilisateur</b> peut ajouter des photos, les modifier, les effacer. Il voit ses propres photos, validées ou pas, et il voit des autres les photos validées et visibles en ligne.</li>
+		<li>Un <b>visiteur</b> peut seulement voir les photos : celles qui sont validées et visibles en ligne. Il ne peut pas en créer.</li>
+		<li>Un <b>utilisateur en attente</b> est un utlisateur qui attend d&apos;être validé par un administrateur. Il peut créer des photos, les modifier et les supprimer, mais il ne peut voir que ses propres photos.</li>
+	</ul>
 </script>

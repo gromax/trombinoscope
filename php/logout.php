@@ -7,5 +7,4 @@
 	unset($_SESSION['NOMPRENOMtrombi']);
 	unset($_SESSION['EMAILtrombi']);
 	unset($_SESSION['RANKtrombi']);
-	unset($_SESSION['mySugs']);
 ?>

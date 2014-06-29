@@ -14,9 +14,9 @@
 	require_once('./conx/connexion.php');
 
 	// Vérification de l'autorisation
-	if ((RANK==RANK_USER)||(RANK==RANK_WAITING_USER)||(RANK==RANG_PRIVILEGED_USER)) {
-		if ($id!=$_POST['IDtrombi']) die('({state:"failed",error:"Vous ne pouvez modifier que votre compte."})');
-	} elseif( RANK<RANG_ADMIN) {
+	if ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)||(RANK==RANG_PRIVILEGED_USER)) {
+		if ($id!=$_SESSION['IDtrombi']) die('({state:"failed",error:"Vous ne pouvez modifier que votre compte."})');
+	} elseif(RANK<RANG_ADMIN) {
 		die('({state:"failed",error:"Vous n&apos;êtes pas autorisé à faire ce changement."})');
 	}
 

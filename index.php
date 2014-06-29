@@ -56,11 +56,11 @@
 					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Personnes<b class="caret"></b></a>
 					  		<ul class="dropdown-menu">
 								<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1);">Nouvelle</a></li>
-								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Liste</a></li>
+								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Liste</a></li>
 								<li class="divider"></li>
-								<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Inscriptions</a></li>
+								<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Inscriptions</a></li>
 								<li class="divider"></li>
-								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(true); affichage.setPageActive(null); affichage.trombinoscope()">Trombinoscope</a></li>
+								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(); affichage.setPageActive(null); affichage.trombinoscope()">Trombinoscope</a></li>
 					  		</ul>
 						</li>
 						<li class="dropdown">
@@ -81,7 +81,7 @@
 <?php } elseif ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
 					<ul class="nav navbar-nav">
 						<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
-						<li><a href="#" onclick="data.setFilter(true,{filtreContribsOf:data.user.ID}); data.applyFilter(true); affichage.setPageActive(null); affichage.liste();">Mes photos</a></li>
+						<li><a href="#" onclick="data.setFilter(true,{filtreContribsOf:data.user.ID}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Mes photos</a></li>
 					</ul>
 <?php } } ?>
 
@@ -99,12 +99,13 @@
 					</form>
 <?php } elseif((RANK>=RANG_ADMIN)||(RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
 					 <ul class="nav navbar-nav navbar-right">
+						<li><a href="#" onclick="goHome();"><span class="glyphicon glyphicon-home"></span></a></li>
 						<li><a href="#" onclick="modifMonCompteForm();"><span class="glyphicon glyphicon-user"></span></a></li>
 						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
 					</ul>
 <?php }	elseif(RANK==RANG_VISITOR) { ?>
 					<ul class="nav navbar-nav navbar-right">
-						<li><a href="#" onclick="addModUser(-1);">Créer un compte</a></li>
+						<li><a href="#" onclick="goHome();"><span class="glyphicon glyphicon-home"></span></a></li>
 						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
 					</ul>
 <?php } ?>		

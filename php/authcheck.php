@@ -16,7 +16,6 @@
 	}
 
 	function author($action,$params){
-		if (isset($_SESSION['mySugs'])) $mySugs=$_SESSION['mySugs']; else $mySugs=array();
 		switch($action){
 			case "delEvent" :
 				if (RANK>=RANG_ADMIN) return true;
@@ -28,22 +27,22 @@
 				if (RANK>=RANG_ADMIN) return true;
 				break;
 			case "addLink" :
-				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_PRIVILEGED_USER) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
 				break;
 			case "removeLink" :
-				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_PRIVILEGED_USER) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
 				break;
 			case "addNewPerson" :
-				if ((RANK>=RANG_ADMIN)|| (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
+				if ((RANK>=RANG_ADMIN)|| (RANK==RANG_PRIVILEGED_USER) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
 				break;
 			case "delPerson" :
-				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_PRIVILEGED_USER) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
 				break;
 			case "modPerson" :
-				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
+				if ( (RANK>=RANG_ADMIN) || (RANK==RANG_PRIVILEGED_USER) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER) ) return true;
 				break;
 			case "modMyAccount" :
-				if ((RANK>=RANG_ADMIN)||(RANK==RANG_USER) || (RANK==RANG_WAITING_USER)) return true;
+				if ((RANK>=RANG_ADMIN) || (RANK==RANG_PRIVILEGED_USER) || (RANK==RANG_USER) || (RANK==RANG_WAITING_USER)) return true;
 				break;
 			case "personsWidthPhoto" :
 				if (RANK>0) return true;

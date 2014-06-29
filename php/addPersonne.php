@@ -22,7 +22,7 @@
 
 			if (RANK>=RANG_ADMIN) { $S=0; }
 			else { $S=1; }
-			if ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { $idA=$_SESSION['IDtrombi']; }
+			if ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { $idA=$_SESSION['IDtrombi']; }
 			else { $idA=0; }
 
 
@@ -48,7 +48,6 @@
 			try {
 				$addPersonne = $addPersonnePrepa->execute($params);
 				$id=$connexion->lastInsertId();
-				if ($S==1) $_SESSION['mySugs'][$id]=true;
 				die ('({state:"success", insertedID:'.$id.'})');
 			} catch( Exception $e ){
 				die('({state:"failed",error:"add personne : '.$e->getMessage().'"})');
