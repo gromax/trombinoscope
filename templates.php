@@ -372,6 +372,7 @@
 		<center><form method='POST' action='./php/upload.php' enctype='multipart/form-data' target='loadFrame'>
 			<input type='file' title='Modifier' class='btn-primary' onchange='javascript:submit();' name='avatar'>
 			<input type='hidden' name='MAX_FILE_SIZE' value='500000'>
+			<button type='button' id='cropImageBtn' idP='{{ID}}' class='btn btn-primary' data-toggle="modal" data-target="#bootstrap-modal">Recadrer</button>
 			<input type='hidden' name='IDP' value='{{ID}}'>
 		</form></center>
 		<iframe class='frameLoad' src='#' name='loadFrame' id='loadFrame'></iframe>
@@ -428,6 +429,27 @@
 			</div>
 		{{/if}}
 	</div>
+
+
+	{{#if PHOTO}}
+		<div class="modal fade" id="bootstrap-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title" id="myModalLabel">Recadrer votre photo</h4>
+					</div>
+					<div class="modal-body">
+						<div class="bootstrap-modal-cropper"><img id='photoCrop' src="./img/{{PHOTO}}.jpg"></div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+						<button id='validCropBtn' idP="{{ID}}" type="button" class="btn btn-primary">Valider</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	{{/if}}
 </script>
 
 <!-- Liste des utilisateurs -->
@@ -562,7 +584,8 @@
 		<li>Un nouvel utilisateur est invité à choisir un <b>pseudo</b> et un <b>mot de passe</b>.</li>
 		<li>Ils peuvent préciser leur nom et leur prénom pour faciliter leur identification.</li>
 		<li>Ils peuvent préciser un email pour faciliter le dialogue.</li>
-		<li>Les administrateurs sont seuls à pouvoir voir toutes ces informations, mais ils ne peuvent pas connaître le mot de passe des utilisateurs qui sont cryptés en base de données.</li>
+		<li>Les administrateurs sont seuls à pouvoir voir toutes ces informations, mais ils ne peuvent pas connaître le mot de passe des utilisateurs qui sont cryptés en base de données<br/>
+		<i>Attention tout de même : le type de cryptage utilisé (MD5) n&apos;est pas inviolable !</i></li>
 		<li>Un utilisateur peut changer ses données et son mot de passe, mais pas son pseudo. Il peut toutefois demander à un administrateur de le faire pour lui.</li>
 		<li>Un utlilsateur ne peut pas éffacer son compte, mais il peut demander à un administeur de le faire pour lui.</li>
 		<li>Quand un utilisateur se connecte, on enregistre en base de données l&apos;heure de sa dernière connexion.</li>

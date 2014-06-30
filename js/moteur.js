@@ -464,6 +464,34 @@ function afficherFormulaireModificationPersonne(id){
 	container.empty();
 	affichage.displayFilter(container);
 	container.append(template(context));
+
+	// Gestion du modal et du crop
+	if ((personne!=null)&&(personne.PHOTO!='')) {
+		var $modal = $("#bootstrap-modal"),
+		    $image = $modal.find(".bootstrap-modal-cropper img"),
+		    initialized = false,
+		    originalData = {};
+
+		$modal.on("shown.bs.modal", function() {
+		    if (initialized) {
+		        $image.cropper("enable", function() {
+		            $(this).cropper("setData", originalData);
+		        });
+		    } else {
+		        initialized = true;
+		        $image.cropper({
+		        	aspectRatio : 3/4,
+		            done: function(data) {
+		                //console.log(data);
+		            }
+		        });
+		    }
+		}).on("hidden.bs.modal", function() {
+		    originalData = $image.cropper("getData");
+		    $image.cropper("disable");
+		});
+	}
+
 	
 	//--- Création des évènements  -------
 	$('#precButton').bind("click", function() { choixModifOuAffichage(data.getPrev(this.getAttribute("idP"),false)); });
@@ -474,7 +502,26 @@ function afficherFormulaireModificationPersonne(id){
 	$('#personneModif').submit(function(){ var id=validerFormulaireModificationPersonne(this.getAttribute("idP")); if(id!=-1) { choixModifOuAffichage(id); } return false; });
 	$("a[name|='evenement']").bind("click",toggleParticipationAEvenement);
 	$('input[type=file]').bootstrapFileInput();
+	$("#validCropBtn").bind("click", function(){ cropImage($image.cropper("getData"),this.getAttribute("idP")); })
 }
+
+// Formulaire de recadrage d'image
+function cropImage(sizeData,id){
+	var reponse;
+	var personne = data.getPersonneById(id);
+	if ((personne!=null)&&(personne.PHOTO!='')) {
+		reponse=manager.cropImage(sizeData,id);
+		if (reponse.state=="success") {
+			personne.PHOTO=reponse.PHOTO;
+			$('#photo').attr("src", './img/'+personne.PHOTO+".jpg");
+			$('#photoCrop').attr("src", './img/'+personne.PHOTO+".jpg");
+			$('#bootstrap-modal').modal('hide');
+		} else {
+			addAlert("Échec du recadrage.",0);
+		}
+	}
+}
+
 
 // Validation du formulaire de modification d'une personne
 function validerFormulaireModificationPersonne(id){
@@ -1633,6 +1680,13 @@ manager.delUser=function(id){
 manager.validPersonne=function(id){
 	return this.post('./php/validPersonne.php',{ID:id});
 }
+
+// Requête pour le redimmensionnement d'une image
+manager.cropImage=function(sizeData,id){
+	sizeData.id=id;
+	return this.post('./php/cropImage.php',sizeData);
+}
+
 //------------------------
 // Typographique et divers
 //------------------------

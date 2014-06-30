@@ -10,6 +10,7 @@
 		<title>Trombinoscope</title>
 		<link media="screen" rel="stylesheet" href='./style.css' type="text/css"/>
 		<link href="./lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<link href="./lib/cropper/cropper.min.css" rel="stylesheet" media="screen">
 		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"><!-- Autocomplete-->
 		<script language='javascript' type='text/javascript'> //Définition des constantes
 			var RANG_SUPER_ADMIN=<?php echo RANG_SUPER_ADMIN; ?>;
@@ -28,6 +29,7 @@
 		<script src="./lib/bootstrap/js/bootstrap.min.js"></script>
 		<script src="./lib/bootstrap.file-input.js"></script>
 		<script src="./lib/handlebars.js"></script>
+		<script src="./lib/cropper/cropper.min.js"></script>
 
 		
 <!-- Templates handlebars -->
