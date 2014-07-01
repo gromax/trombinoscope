@@ -99,7 +99,15 @@
 						</div>
 						<button class="btn btn-success" type="submit">Valider</button>
 					</form>
-<?php } elseif((RANK>=RANG_ADMIN)||(RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
+<?php } elseif(RANK>=RANG_ADMIN) { ?>
+					 <ul class="nav navbar-nav navbar-right">
+						<li><a href="#" onclick="affichage.trombinoscope();"><span class="glyphicon glyphicon-th"></span></a></li>
+						<li><a href="#" onclick="affichage.liste();"><span class="glyphicon glyphicon-list-alt"></span></a></li>
+						<li><a href="#" onclick="goHome();"><span class="glyphicon glyphicon-home"></span></a></li>
+						<li><a href="#" onclick="modifMonCompteForm();"><span class="glyphicon glyphicon-user"></span></a></li>
+						<li><a href="#" onclick="deconnexion();"><span class="glyphicon glyphicon-off"></span></a></li>
+					</ul>
+<?php } elseif((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
 					 <ul class="nav navbar-nav navbar-right">
 						<li><a href="#" onclick="goHome();"><span class="glyphicon glyphicon-home"></span></a></li>
 						<li><a href="#" onclick="modifMonCompteForm();"><span class="glyphicon glyphicon-user"></span></a></li>
