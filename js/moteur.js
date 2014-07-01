@@ -301,7 +301,6 @@ function delUser(id){
 			} else {
 				addAlert("Échec de la suppression.",1);
 			}
-
 		}
 	}
 }
@@ -414,23 +413,14 @@ function afficherListeEvenements(){
 //------------------------------
 
 // Choisi, suivant le cas, entre l'affichage d'une personne et le formulaire de modification
-function choixModifOuAffichage(id){
-	var personne;
-	if (typeof id == 'object') {
-		if (id==null) {
-			personne=null;
-			id=-1;
-		} else {
-			personne=id;
-			id=personne.ID;
-		}
-	} else {
-		personne=data.getPersonneById(id);
+function choixModifOuAffichage(personne){
+	if (typeof personne != 'object') {
+		personne=data.getPersonneById(personne);
 	}
 
 	if (personne==null) { afficherFormulaireModificationPersonne(null); }
 	else {
-		if ((RANK>RANG_ADMIN)||(personne.SUG==1)||(personne.IDA==data.user.ID)) {
+		if ((RANK>=RANG_ADMIN)||(personne.SUG==1)||(personne.IDA==data.user.ID)) {
 			afficherFormulaireModificationPersonne(personne);
 		} else {
 			affichage.personne(personne);
@@ -532,13 +522,14 @@ function afficherFormulaireModificationPersonne(id){
 	//--- Création des évènements  -------
 	$('#precButton').bind("click", function() { choixModifOuAffichage(data.getPrev(this.getAttribute("idP"),false)); });
 	$('#nextButton').bind("click", function() { choixModifOuAffichage(data.getNext(this.getAttribute("idP"))); });
-	$('#delButton').bind("click", function() { var idP=this.getAttribute("idP"); if(delPersonne(idP)) { choixModifOuAffichage(data.getPrev(idP,true));} });
+	$('#delButton').bind("click", function() { var idP=this.getAttribute("idP"); var personneToDisplay=data.getPrev(idP,true); if(delPersonne(idP)) { choixModifOuAffichage(personneToDisplay);} });
 	$('#retourButton').bind("click", function() { affichage.setPageActive(this.getAttribute("idP")); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
 	$('#nouveauButton').bind("click", function() { afficherFormulaireModificationPersonne(-1); });
 	$('#personneModif').submit(function(){ var id=validerFormulaireModificationPersonne(this.getAttribute("idP")); if(id!=-1) { choixModifOuAffichage(id); } return false; });
 	$("a[name|='evenement']").bind("click",toggleParticipationAEvenement);
 	$('input[type=file]').bootstrapFileInput();
-	$("#validCropBtn").bind("click", function(){ cropImage($image.cropper("getData"),this.getAttribute("idP")); })
+	$("#validCropBtn").bind("click", function(){ $('#ajaxFlagModal').removeClass('invisible'); cropImage($image.cropper("getData"),this.getAttribute("idP")); })
+	$("#btnFile").change(function(){ $('#ajaxFlag').removeClass('invisible');})
 }
 
 // Formulaire de recadrage d'image
@@ -551,6 +542,7 @@ function cropImage(sizeData,id){
 			personne.PHOTO=reponse.PHOTO;
 			$('#photo').attr("src", './img/'+personne.PHOTO+".jpg");
 			$('#photoCrop').attr("src", './img/'+personne.PHOTO+".jpg");
+			$('#ajaxFlagModal').addClass('invisible');
 			$('#bootstrap-modal').modal('hide');
 		} else {
 			addAlert("Échec du recadrage.",0);
@@ -651,8 +643,9 @@ function delPersonne(id,force){
 }
 
 // Retour du chargement d'une image
+// arrive seulement dans un panneau de modification d epersonne
 function loadTrigger(callBack){
-	var it;
+	var personne;
 	var id;
 	var photo;
 	var nodePhoto;
@@ -660,11 +653,10 @@ function loadTrigger(callBack){
 	if (callBack.state=='success') {
 		id=callBack.id;
 		photo=callBack.PHOTO;
-		it=data.getPersonneById(id);
-		if (it!=null) { it.PHOTO=photo; }
-		nodePhoto=$("#photo");
-		if (nodePhoto.length>0){
-			nodePhoto.attr("src", urlImg+photo+".jpg");
+		personne=data.getPersonneById(id);
+		if (personne!=null) {
+			personne.PHOTO=photo;
+			afficherFormulaireModificationPersonne(personne);
 		}
 	} else addAlert("<strong>Echec !</strong> "+callBack.error,0);
 }
@@ -1064,6 +1056,7 @@ data.getPrev=function(personne,forceElse){
 	var retour;
 	personne = typeof personne == 'object' ? personne : this.getPersonneById(personne);
 	index=this.listeAAfficher.indexOf(personne);
+	console.log(index);
 	if (index==-1) { return null; }
 	else {
 		index--;

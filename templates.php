@@ -370,7 +370,8 @@
 			<img id='photo' src='./img/inconnu.png' class='upImg'>
 		{{/if}}
 		<center><form method='POST' action='./php/upload.php' enctype='multipart/form-data' target='loadFrame'>
-			<input type='file' title='Modifier' class='btn-primary' onchange='javascript:submit();' name='avatar'>
+			<img id='ajaxFlag' class='invisible' src='./ajax.gif'>
+			<input type='file' title='Modifier' id='btnFile' class='btn-primary' onchange='javascript:submit();' name='avatar'>
 			<input type='hidden' name='MAX_FILE_SIZE' value='500000'>
 			<button type='button' id='cropImageBtn' idP='{{ID}}' class='btn btn-primary' data-toggle="modal" data-target="#bootstrap-modal">Recadrer</button>
 			<input type='hidden' name='IDP' value='{{ID}}'>
@@ -443,6 +444,7 @@
 						<div class="bootstrap-modal-cropper"><img id='photoCrop' src="./img/{{PHOTO}}.jpg"></div>
 					</div>
 					<div class="modal-footer">
+						<img class='invisible' id='ajaxFlagModal' src='./ajax.gif'>
 						<button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
 						<button id='validCropBtn' idP="{{ID}}" type="button" class="btn btn-primary">Valider</button>
 					</div>
