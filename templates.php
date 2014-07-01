@@ -551,6 +551,7 @@
 <script id="accueil-waiting-user" type="text/x-handlebars-template">
 	<div class="jumbotron">
 		<h1>Bienvenue !</h1>
+		<p>Vous êtes un <b>utillisateur en attente de validation</b>.</p>
 		<p>Vous pouvez maintenant ajouter des personnes avec leurs photos. Une seule personne peut inscrire toute sa famille, tous ses invités.</p>
 		<p>
 			<a name='addPerson' class="btn btn-primary btn-lg" role="button">Ajouter une photo</a>
@@ -570,6 +571,26 @@
 			<a name='trombi' class="btn btn-primary btn-lg" role="button">Voir le trombinoscope</a>
 			<a name='addPerson' class="btn btn-primary btn-lg" role="button">Ajouter une photo</a>
 			<a name='mesPhotos' class="btn btn-primary btn-lg" role="button">Voir mes photos</a>
+			<a name='monCompte' class="btn btn-primary btn-lg" role="button">Modifier mon compte <span class="glyphicon glyphicon-user"></span></a>
+		</p>
+	</div>
+	<a href='#' name='btnInfo'>fonctionnement du site</a>
+</script>
+
+<!-- Panneau d'accueil pour un admin -->
+<script id="accueil-admin-template" type="text/x-handlebars-template">
+	<div class="jumbotron">
+		<h1>Bienvenue !</h1>
+		<p>Vous êtes connecté(e) avec un compte <b>Administrateur</b>.</p>
+		{{#if photosEnAttente}}
+			<p><a name='photosEnAttenteBtn' class="btn btn-warning btn-lg" role="button"><span class="badge">{{photosEnAttente}}</span> photo(s) en attente de validation</a></p>
+		{{/if}}
+		{{#if usersEnAttente}}
+			<p><a name='usersEnAttenteBtn' class="btn btn-warning btn-lg" role="button"><span class="badge">{{usersEnAttente}}</span> utilisateur(s) en attente de validation</a></p>
+		{{/if}}
+		<p>
+			<a name='listePhotosBtn' class="btn btn-primary btn-lg" role="button">Liste des photos</a>
+			<a name='addPerson' class="btn btn-primary btn-lg" role="button">Ajouter une photo</a>
 			<a name='monCompte' class="btn btn-primary btn-lg" role="button">Modifier mon compte <span class="glyphicon glyphicon-user"></span></a>
 		</p>
 	</div>

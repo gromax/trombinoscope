@@ -128,7 +128,8 @@
 					</div>
 
 					<h4>Informations</h4>
-					Cet outil n'est pas géré par Mensa et est hébergé sur le serveur personnel de <a href='mailto:gromaxx@gmail.com'>Maxence Klein</a>. Nous stockons un minimum d'informations : nom, prénom, photo, tout le reste est optionnel.
+					<p>Cet outil n'est pas géré par Mensa et est hébergé sur le serveur personnel de <a href='mailto:gromaxx@gmail.com'>Maxence Klein</a>. Nous stockons un minimum d'informations : nom, prénom, photo, tout le reste est optionnel.</p>
+					<p>Ce site <b>n&apos;est pas compatible</b> avec internet explorer et nécessite l&apos;activation de <b>javascript</b>.</p>
 <?php } ?>
 				</div>
 			</div>

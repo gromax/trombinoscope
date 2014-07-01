@@ -46,10 +46,46 @@ function rankName(rank){
 
 // Affiche un écran d'accueil
 function goHome(){
+	if (RANK>=RANG_ADMIN) { accueilAdmin(); }
 	if (RANK==RANG_PRIVILEGED_USER) { accueilUser(); }
 	if (RANK==RANG_USER) { accueilUser(); }
 	if (RANK==RANG_WAITING_USER) { accueilWaitingUser(); }
 }
+
+// Ecran d'accueil pour un utilisateur en attente
+function accueilAdmin(){
+	var 	i,
+			usersEnAttente=0,
+			photosEnAttente=0,
+			container=$("#mainContent"),
+			context={};
+	
+	// On fait apparaître les travaux en cours :
+	// * Utilisateurs en attente
+	// * Photos en attente de validation
+	for (i=0;i<data.personnes.length;i++){
+		if (data.personnes[i].SUG==1) { photosEnAttente++; }
+	}
+	for (i=0;i<data.usersList.length;i++){
+		if (data.usersList[i].RANK==RANG_WAITING_USER) { usersEnAttente++; }
+	}
+
+	if (usersEnAttente>0) { context.usersEnAttente=usersEnAttente; }
+	if (photosEnAttente>0) { context.photosEnAttente=photosEnAttente; }
+
+	container.empty();
+	var source   = $("#accueil-admin-template").html();
+	var template = Handlebars.compile(source);
+	container.append(template(context));
+	$("a[name='addPerson']").bind("click",function() { afficherFormulaireModificationPersonne(-1); });
+	$("a[name='monCompte']").bind("click",function() { modifMonCompteForm(); });
+	$("a[name='listePhotosBtn']").bind("click",function() { data.setFilter(true,null); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); });
+	$("a[name='btnInfo']").bind("click",information);
+	$("a[name='photosEnAttenteBtn']").bind("click",function() { data.setFilter(true,{filtreS:1}); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); });
+	$("a[name='usersEnAttenteBtn']").bind("click",function() { affichage.listeUsers(); });
+
+}
+
 
 // Ecran d'accueil pour un utilisateur en attente
 function accueilWaitingUser(){
@@ -1203,7 +1239,6 @@ affichage.displayFilter=function(container){
 	var context={items:[]};
 	var proprieraire;
 
-	
 	if ((data.filtreS!=null)||(data.filtreContribsOf!=null)||(data.filtreP!=null)||(data.filtreV!=null)||(data.filtreR!=null)||(data.filtreE!=null)||(data.activeSearch)){
 		txtToAppend+="<span class='glyphicon glyphicon-filter'></span>";
 		if (data.filtreS==1) {	context.items.push({className:'label-warning', text:'Non validés', f:'S'}); }
