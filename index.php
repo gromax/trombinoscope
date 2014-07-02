@@ -55,7 +55,7 @@
 	if (RANK>=RANG_ADMIN) { ?>
 					<ul class="nav navbar-nav">
 						<li class="dropdown">
-					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Personnes<b class="caret"></b></a>
+					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Photos<b class="caret"></b></a>
 					  		<ul class="dropdown-menu">
 								<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1);">Nouvelle</a></li>
 								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Liste</a></li>

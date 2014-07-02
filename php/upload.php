@@ -3,15 +3,15 @@
 	function recopImage($imgSource, $ratio){
 		$largeurSource = imagesx($imgSource);
 		$hauteurSource = imagesy($imgSource);
-		$ratioSource=$hauteurSource/$largeurSource;
+		$ratioSource=$largeurSource/$hauteurSource;
 		if ($ratioSource!=$ratio){
-			if($ratioSource>$ratio) {
-				$largeur=$hauteurSource/$ratio;
+			if($ratioSource<$ratio) {
+				$largeur=$hauteurSource*$ratio;
 				$im = ImageCreateTrueColor ($largeur, $hauteurSource);
 				ImageFilledRectangle ($im, 0, 0, $largeur, $hauteurSource,  ImageColorAllocate ($im, 255, 255, 255) );
 				ImageCopyResampled($im, $imgSource, ($largeur-$largeurSource)/2, 0, 0, 0, $largeurSource, $hauteurSource, $largeurSource, $hauteurSource); 
 			} else {
-				$hauteur=$largeurSource*$ratio;
+				$hauteur=$largeurSource/$ratio;
 				$im = ImageCreateTrueColor ($largeurSource, $hauteur);
 				ImageFilledRectangle ($im, 0, 0, $largeurSource, $hauteur,  ImageColorAllocate ($im, 255, 255, 255) );
 				ImageCopyResampled($im, $imgSource, 0, ($hauteur-$hauteurSource)/2, 0, 0, $largeurSource, $hauteurSource, $largeurSource, $hauteurSource); 
@@ -51,7 +51,7 @@
 
 					$imgS = ImageCreateFromJpeg($imgFolder . $id.'.jpg')
 						or die ('<script> window.top.window.loadTrigger(eval({state:"failed", error:"'.$imgFile.'  Erreur lors de la création de l\'image"}));</script>');
-					$imgD=recopImage($imgS, 1.333);
+					$imgD=recopImage($imgS, 0.75);
 					//imagedestroy($imgS);
 					imagejpeg($imgD,$imgFolder . $id.'.jpg');
 					//imagedestroy($imgD);

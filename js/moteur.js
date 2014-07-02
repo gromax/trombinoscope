@@ -23,16 +23,16 @@ function init(){
 	}
 }
 
-function rankName(rank){
-	if (rank==RANG_SUPER_ADMIN) { return "Super administrateur"; }
+function rankName(rankUser){
+	if (rankUser==RANG_SUPER_ADMIN) { return "Super administrateur"; }
 	else {
-		if (rank==RANG_ADMIN) { return "Administrateur"; }
+		if (rankUser==RANG_ADMIN) { return "Administrateur"; }
 		else {
-			if (rank==RANG_PRIVILEGED_USER) { return "Utilisateur privilégié"; }
+			if (rankUser==RANG_PRIVILEGED_USER) { return "Utilisateur privilégié"; }
 			else {
-				if (rank==RANG_USER) { return "Utilisateur"; }
+				if (rankUser==RANG_USER) { return "Utilisateur"; }
 				else {
-					if (rank==RANG_VISITOR) { return "Visiteur"; }
+					if (rankUser==RANG_VISITOR) { return "Visiteur"; }
 				}
 			}
 		}
@@ -200,7 +200,7 @@ function validAddModUser(){
 	var email=$('#inputEmail').val();
 	var pwdInput1=$('#pwd1');
 	var pwdInput2=$('#pwd2');
-	var rank;
+	var rankUser;
 	var key;
 
 	if ((id==-1) && (RANK<RANG_ADMIN)) {
@@ -208,8 +208,8 @@ function validAddModUser(){
 		$('#key').val('');
 	} else { key=null; }
 
-	if (RANK>=RANG_ADMIN) {	rank=$('#selectRank').val(); }
-	else {rank=null;}
+	if (RANK>=RANG_ADMIN) {	rankUser=$('#selectRank').val(); }
+	else {rankUser=null;}
 
 	if (pwdInput1.val()!=pwdInput2.val()) { addAlert("Mots de passe différents.",0); }
 	else {
@@ -217,11 +217,11 @@ function validAddModUser(){
 		if ((id!=-1)&&(pwd=='')) { pwd=null; }
 		else { pwd=MD5(PWD_SEED+pwd); }
 
-		reponse=manager.addModUser(pseudo, email, pwd, rank, id, key, nomPrenom);
+		reponse=manager.addModUser(pseudo, email, pwd, rankUser, id, key, nomPrenom);
 		if (reponse.state=="success") {
-			if(rank==null) { rank=RANG_WAITING_USER; }
+			if(rankUser==null) { rankUser=RANG_WAITING_USER; }
 			if (id==-1) {
-				user={ID:reponse.insertedID, PSEUDO:pseudo, NOMPRENOM:nomPrenom, EMAIL:email, RANK:rank, rankName:rankName(rank), editable:true, deletable:true};
+				user={ID:reponse.insertedID, PSEUDO:pseudo, NOMPRENOM:nomPrenom, EMAIL:email, RANK:rankUser, rankName:rankName(rankUser), editable:true, deletable:true};
 				if (data.usersList!=null) { data.usersList.push(user); }
 				addAlert("Succès de la création.",1);
 			} else {
@@ -229,8 +229,8 @@ function validAddModUser(){
 				if (user!=null) {
 					user.PSEUDO=pseudo;
 					user.EMAIL=email;
-					user.RANK=rank;
-					user.rankName=rankName(rank);
+					user.RANK=rankUser;
+					user.rankName=rankName(rankUser);
 					user.NOMPRENOM=nomPrenom;
 					addAlert("Succès de la modification.",1);
 				}
@@ -451,6 +451,7 @@ function afficherFormulaireModificationPersonne(id){
 	
 	//--- Création du contexte -------
 	if (personne!=null){
+		if (personne.SUG==1) { context.SUG=true; }
 		context.ID=personne.ID;
 		context.NOM=personne.NOM;
 		context.PRENOM=personne.PRENOM;
@@ -488,8 +489,9 @@ function afficherFormulaireModificationPersonne(id){
 	var template = Handlebars.compile(source);
 
 	container.empty();
-	affichage.displayFilter(container);
 	container.append(template(context));
+	affichage.displayFilter($('#barreDeFiltre'));
+
 
 	// Gestion du modal et du crop
 	if ((personne!=null)&&(personne.PHOTO!='')) {
@@ -522,6 +524,7 @@ function afficherFormulaireModificationPersonne(id){
 	//--- Création des évènements  -------
 	$('#precButton').bind("click", function() { choixModifOuAffichage(data.getPrev(this.getAttribute("idP"),false)); });
 	$('#nextButton').bind("click", function() { choixModifOuAffichage(data.getNext(this.getAttribute("idP"))); });
+	$('#validButton').bind("click", function() { var idP=this.getAttribute("idP"); if (validationPersonne(idP)){ afficherFormulaireModificationPersonne(idP); } });
 	$('#delButton').bind("click", function() { var idP=this.getAttribute("idP"); var personneToDisplay=data.getPrev(idP,true); if(delPersonne(idP)) { choixModifOuAffichage(personneToDisplay);} });
 	$('#retourButton').bind("click", function() { affichage.setPageActive(this.getAttribute("idP")); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
 	$('#nouveauButton').bind("click", function() { afficherFormulaireModificationPersonne(-1); });
@@ -574,7 +577,7 @@ function validerFormulaireModificationPersonne(id){
 	if (reponse.state=="success") {
 		if (id==-1) {
 			parametres.ID=reponse.insertedID;
-			if ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK=RANG_WAITING_USER)) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
+			if ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
 			data.addPersonne(parametres);
 			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été ajouté(e).",1);
 		} else {
@@ -663,18 +666,26 @@ function loadTrigger(callBack){
 
 // Validation de personnes, avec le bouton dans la liste
 function validationPersonnes(){
-	var reponse;
 	var checkeds=$("input:checked");
 	checkeds.each(function(items){
-		var id=$(this).attr("idP");
-		var p=data.getPersonneById(id);
-		if ((p!=null)&&(p.SUG==1)) {
-			reponse=manager.validPersonne(p.ID);
-			if(reponse.state=="success") { data.validPersonne(p); }
-			else { addAlert("Échec lors de la validation de <i>"+p.PRENOM+" "+p.NOM+"</i>",0); }
-		}
+		validationPersonne($(this).attr("idP"));
 	});
 	affichage.liste();
+}
+
+// Validation d'une personne
+function validationPersonne(personne){
+	var reponse;
+	personne = typeof personne =='object' ? personne : data.getPersonneById(personne);
+	if (personne!=null){
+		reponse=manager.validPersonne(personne.ID);
+		if (reponse.state=="success") {
+			data.validPersonne(personne);
+			return true;
+		}
+		addAlert("Échec lors de la validation de <i>"+personne.PRENOM+" "+personne.NOM+"</i>",0);
+	}
+	return false;
 }
 
 //-------------------------
@@ -1073,143 +1084,6 @@ data.validPersonne=function(personne){
 	if (personne!=null) { personne.SUG=0; }
 }
 
-//------------------------
-// Fusion
-//------------------------
-
-var mergeItem={liste:[], resultat:null, currentAttribute:null} // objet personne servant à la fusion
-
-function checkItemsToMerge(){
-	mergeItem.liste.length=0;
-	mergeItem.resultat={};
-	var checkeds=$("input:checked");
-	checkeds.each(function(items){
-		var id=$(this).attr("idP");
-		var p=data.getPersonneById(id);
-		if (p!=null) mergeItem.liste.push(p);
-	});
-	mergeItem.liste.sort(comparePersonnesDate); // Pour les VL et EP, on prendra ceux du dernier en date
-	if (mergeItem.liste.length>1) checkItemsDiff();
-}
-
-function checkItemsDiff(){
-	var i,j,index;
-	var attrValue, attr,diffFound;
-	var listeAttr=["NOM", "PRENOM", "VILLE", "IDREGION", "DIVERS", "HOBBY", "PHOTO", "IDA"];
-	var reponse;
-	var flagErreur=false;
-	var personneAUpdater;
-	i=-1;
-	diffFound=false;
-	while (i<listeAttr.length-1 && !diffFound){
-		i++;
-		var attr=listeAttr[i];
-		if (typeof(mergeItem.resultat[attr])=='undefined') {
-			attrValue=mergeItem.liste[0][attr];
-			index=0;
-			for (j=1;j<mergeItem.liste.length;j++) {
-				if ((attrValue!=mergeItem.liste[j][attr])&&(mergeItem.liste[j][attr]!="")) {
-					if((attrValue=="")||(attrValue==0)) {
-						attrValue=mergeItem.liste[j][attr];
-						index=j;
-					} else {
-						diffFound=true;
-						break;
-					}
-				}
-			}
-			if (!diffFound) {
-				mergeItem.resultat[attr]=attrValue;
-				if (attr=="PHOTO") { mergeItem.resultat.ID=mergeItem.liste[index].ID; } // La photo est solidaire de l'id
-			}
-		}
-	}
-	if (diffFound) askForGoodAttribute(attr);
-	else {
-		var lastItemToMerge=mergeItem.liste[mergeItem.liste.length-1];
-		mergeItem.resultat.VL=lastItemToMerge.VL;
-		mergeItem.resultat.EP=lastItemToMerge.EP;
-
-		// Dans tous les cas, un id a été retenu, selon la photo. Ce élément est gardé, les autres sont effacés.
-		personneAUpdater=data.getPersonneById(mergeItem.resultat.ID);
-		i=mergeItem.liste.indexOf(personneAUpdater);
-		if (i>=0) mergeItem.liste.splice(i,1);
-		
-		for (i=0;i<mergeItem.liste.length;i++) {
-			// Il faut ajouter tous les liens vers l'item à updater
-			for (j=0;j<mergeItem.liste[i].liens.length;j++){
-				if (personneAUpdater.liens.indexOf(mergeItem.liste[i].liens[j])==-1) {
-					reponse=manager.addLien(personneAUpdater.ID,mergeItem.liste[i].liens[j].ID);
-					if (reponse.state=="success") { data.addLien(personneAUpdater.ID,mergeItem.liste[i].liens[j].ID); }
-					else { flagErreur=true; }
-				}
-			}
-			reponse=manager.delPersonne(mergeItem.liste[i].ID);
-			if (reponse.state=="success") {	data.delPersonne(mergeItem.liste[i]); }
-			else { flagErreur=true; }
-		}
-		mergeItem.liste.length=0;
-		
-		var reponse=manager.modPersonne(mergeItem.resultat);
-		if (reponse.state=="success"){
-			data.modPersonne(personneAUpdater,mergeItem.resultat);
-			choixModifOuAffichage(mergeItem.resultat.ID);
-		} else {
-			flagErreur=true;
-		}
-		if (flagErreur) { addAlert("La fusion ne s'est pas terminée correctement",0); }
-		mergeItem.resultat=null;
-	}
-}
-
-function askForGoodAttribute(attr){
-	var container=$("#mainContent");
-	var context={items:[]};
-	var i;
-
-	affichage.actif="";
-	
-	mergeItem.currentAttribute=attr;
-	
-	// Création du contexte
-	if (attr=="PHOTO") {
-		for(i=0;i<mergeItem.liste.length;i++){
-			context.items.push({ID:mergeItem.liste[i].ID, PHOTO:mergeItem.liste[i].PHOTO});
-		}		
-	} else {
-		if (attr=="IDREGION") {
-			context.NOM="REGION";
-			for(i=0;i<mergeItem.liste.length;i++){
-				context.items.push({ID:mergeItem.liste[i].ID, VALEUR:data.getRegionById(mergeItem.liste[i].IDREGION).NOM, IDR:mergeItem.liste[i].IDREGION, DATE:shortDateFormat(mergeItem.liste[i].DATE)});
-			}
-		} else {
-			context.NOM=attr;
-			for(i=0;i<mergeItem.liste.length;i++){
-				context.items.push({ID:mergeItem.liste[i].ID, VALEUR:mergeItem.liste[i][attr], DATE:shortDateFormat(mergeItem.liste[i].DATE)});
-			}
-		}
-	}
-	
-	// Application au template handlebars
-	var source;
-	if (attr=="PHOTO") { source=$("#photo-fusion-template").html(); }
-	else { source   = $("#attribute-fusion-template").html(); }
-	var template = Handlebars.compile(source);
-
-	container.empty();
-	container.append(template(context));
-
-	// Création des évènements
-	$("input[type=radio]").bind("click",function(){ var node=$('#chk-'+this.value); mergeItem.selectAttribute(node.val());} );
-	$("#chooseGoodAttribute").submit(function() {checkItemsDiff(); return false; });
-	$("#cancelButton").bind("click",function(){ mergeItem.resultat=null; affichage.liste(); });
-	$("a[name|='photo']").bind("click",function(){ var personne=data.getPersonneById(this.getAttribute('idP')); if (personne!=null) { mergeItem.resultat.ID=personne.ID; mergeItem.resultat.PHOTO=personne.PHOTO; }; checkItemsDiff(); });
-}
-
-mergeItem.selectAttribute=function(val){
-	this.resultat[this.currentAttribute]=val;
-}
-
 //----------------------------------
 // Affichage liste et trombinoscope
 //----------------------------------
@@ -1296,7 +1170,6 @@ affichage.personne=function(id){
 		context.VILLE=personne.VILLE;
 		context.HOBBY=personne.HOBBY;
 		context.DIVERS=personne.DIVERS;
-		context.affCommandes=true;
 		if (personne.PHOTO!='') { context.PHOTO=personne.PHOTO; }
 		context.REGION=data.getRegionById(personne.IDREGION).NOM;
 		context.IDR=personne.IDREGION;
@@ -1314,8 +1187,8 @@ affichage.personne=function(id){
 		var template = Handlebars.compile(source);
 
 		container.empty();
-		affichage.displayFilter(container);
 		container.append(template(context));
+		affichage.displayFilter($('#barreDeFiltre'));
 
 		//--- Création des évènements  -------
 		$('#precButton').bind("click", function() { choixModifOuAffichage(data.getPrev(this.getAttribute("idP"),false)); });
@@ -1371,7 +1244,6 @@ affichage.liste=function(){
 	
 	// Boutons
 	if (RANK>=RANG_ADMIN) {
-		context.fusionButton=true;
 		context.validationButton=true;
 	}
 	
@@ -1417,7 +1289,6 @@ affichage.liste=function(){
 	$("#pagePrecedente").bind("click",function(){affichage.pageActiveListe--; affichage.liste(); return false;});
 	$("#pageSuivante").bind("click",function(){affichage.pageActiveListe++; affichage.liste(); return false;});
 	$("a[name|='page']").bind("click",function(){ affichage.pageActiveListe=this.getAttribute('index'); affichage.liste(); return false;});
-	$('#fusionButton').bind("click",checkItemsToMerge);
 	$('#validationButton').bind("click",validationPersonnes);
 }
 
@@ -1683,12 +1554,12 @@ manager.delPersonne=function(id){
 }
 
 // ajoute ou modifie un compte en BDD
-manager.addModUser=function(pseudo, email, pwd, rank, idU, key, nomPrenom){
+manager.addModUser=function(pseudo, email, pwd, rankUser, idU, key, nomPrenom){
 	var params={};
 	if (pseudo!=null) { params.pseudo=pseudo; }
 	if (email!=null) { params.email=email; }
 	if (pwd!=null) { params.pwd=pwd; }
-	if (rank!=null) { params.rank=rank; }
+	if (rankUser!=null) { params.rank=rankUser; }
 	if (key!=null) { params.key=key; }
 	if (nomPrenom!=null) { params.nomPrenom=nomPrenom; }
 	if (idU!=-1) {

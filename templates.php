@@ -122,9 +122,6 @@
 		</div>
 		<div class='col-md-6 col-xs-6'>
 			<div class='btn-group'>
-			{{#if fusionButton}}
-				<button id='fusionButton' type='button' class='btn btn-primary'>Fusionner</button>
-			{{/if}}
 			{{#if validationButton}}
 				<button id='validationButton' type='button' class='btn btn-primary'>Valider</button>
 			{{/if}}
@@ -280,6 +277,17 @@
 
 <!-- Affichage d'une personne -->
 <script id="affichage-personne-template" type="text/x-handlebars-template">
+	<div class='row'>
+		<div class='col-md-4 col-xs-4'>
+			<div class='btn-group'>
+				<button id='precButton' idP={{ID}} type='button' class='btn btn-default btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
+				<button id='retourButton' type='button' idP={{ID}} class='btn btn-default btn-sm'>Retour</button>
+				<button id='nextButton' idP={{ID}} type='button' class='btn btn-default btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
+			</div>
+		</div>
+		<div id='barreDeFiltre' class='col-md-6 col-xs-6'></div>
+	</div>
+
 	<div class='col-md-3 col-xs-3'>
 		{{#if PHOTO}}
 			<img id='photo' src='./img/{{PHOTO}}.jpg' class='upImg'>
@@ -289,13 +297,7 @@
 	</div>
 
 	<div class='col-md-6 col-xs-6'>
-		{{#if affCommandes}}
-			<div class='btn-group'>
-				<button id='precButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
-				<button id='retourButton' type='button' idP={{ID}} class='btn btn-info btn-sm'>Retour <span class='glyphicon glyphicon-eject'></span></button>
-				<button id='nextButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
-			</div>
-		{{/if}}
+	
 		<h3>{{PRENOM}} {{NOM}}</h3>
 		<dl class="dl-horizontal">
 		  <dt>Ville</dt><dd>{{VILLE}}</dd>
@@ -362,6 +364,30 @@
 			Vous pouvez également indiquer les événements auxquels vous aller participer (avez participé).
 		</div>
 	{{/if}}
+	<div class="row">
+		<div class='col-md-4 col-xs-4'>
+			<div class='btn-group'>
+				<button id='precButton' idP={{ID}} type='button' class='btn btn-default btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
+				<div class='btn-group'>
+					<button type='button' class='btn btn-sm btn-default dropdown-toggle' data-toggle='dropdown'>Menu</button>
+					<ul class="dropdown-menu" role="menu">
+						<li><a href='#' id='nouveauButton'>Nouvelle photo</span></a></li>
+						{{#if SUG}}
+							<li><a href='#' id='validButton' idP={{ID}}>Validation photo</span></a></li>
+						{{/if}}
+						<li><a href='#' id='delButton' idP={{ID}}>Supprimer photo</span></a></li>
+						<li><a href='#' id='retourButton' idP={{ID}}>Retourner à la liste</a></li>
+					</ul>
+				</div>
+				<button id='nextButton' idP={{ID}} type='button' class='btn btn-default btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
+			</div>
+		</div>
+		<div id='barreDeFiltre' class='col-md-6 col-xs-6'>
+			{{#if SUG}}
+				<label class="label label-danger">Photo non validée</span>			
+			{{/if}}
+		</div>
+	</div>
 
 	<div class='col-md-3 col-xs-3'>
 		{{#if PHOTO}}
@@ -380,13 +406,7 @@
 	</div>
 	
 	<div class='col-md-6 col-xs-6'>
-		<div class='btn-group'>
-			<button id='precButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
-			<button id='nouveauButton' type='button' class='btn btn-success btn-sm'>Nouvelle <span class='glyphicon glyphicon-plus'></span></button>
-			<button id='delButton' type='button' idP={{ID}} class='btn btn-danger btn-sm'>Supprimer <span class='glyphicon glyphicon-trash'></span></button>
-			<button id='retourButton' type='button' idP={{ID}} class='btn btn-info btn-sm'>Retour <span class='glyphicon glyphicon-eject'></span></button>
-			<button id='nextButton' idP={{ID}} type='button' class='btn btn-primary btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
-		</div>
+		
 	
 		<form class='form-horizontal' role='form' id='personneModif' idP={{ID}}>
 			<div class='form-group'><label class='col-sm-4 control-label' for='inputNom'>Nom</label><div class='col-sm-8'><input type='text' class='form-control' id='inputNom' placeholder='Entrez un nom' value='{{NOM}}'></div></div>
@@ -502,51 +522,11 @@
 	</table>
 </script>
 
-<!-- Formulaire de fusion pour les attributs : NOM, PRENOM, VILLE, REGION, HOBBY, DIVERS -->
-<script id="attribute-fusion-template" type="text/x-handlebars-template">
-	<h1>Fusion d&apos;éléments</h1>
-	<h4>Choisissez le bon attribut : {{NOM}}</h4>
-	<form role='form' id='chooseGoodAttribute'>
-		{{#each items}}
-			<div class='col-sm-6'>
-				<span class="glyphicon glyphicon-calendar"></span>{{this.DATE}}
-				<div class='input-group'>
-					<span class='input-group-addon'><input type='radio' name='optionRadio' id='rad-{{this.ID}}' value={{this.ID}}></span>
-					{{#if this.IDR}}
-						<input type='text' value='{{this.VALEUR}}' class='form-control' readonly>
-						<input id='chk-{{this.ID}}' type='hidden' value='{{this.IDR}}'></div></div>
-					{{else}}
-						<input id='chk-{{this.ID}}' type='text' value='{{this.VALEUR}}' class='form-control'>
-					{{/if}}
-				</div>
-			</div>
-		{{/each}}
-		<div class='btn-group'>
-		<button type='submit' class='btn btn-primary'>Suivant</button>
-		<button type='button' id='cancelButton' class='btn btn-danger'>Annuler</button>
-		</div>
-	</form>
-</script>
-
-<!-- Formulaire de fusion pour l\'attribut PHOTO -->
-<script id="photo-fusion-template" type="text/x-handlebars-template">
-	<h1>Fusion d&apos;éléments</h1>
-	<h4>Choisissez la bonne photo</h4>
-	{{#each items}}
-		<div class='col-sm-4'>
-		<a href='#' class='thumbnail' name='photo-{{this.ID}}' idP={{this.ID}}><img src='./img/{{this.PHOTO}}.jpg' width='150' height='200'></a>
-		</div>
-	{{/each}}
-	<button type='button' id='cancelButton' class='btn btn-danger'>Annuler</button>
-</script>
-
 <!-- Formulaire pour les filtres -->
 <script id="filtres-template" type="text/x-handlebars-template">
-	<div class='filtres'>
-		{{#each items}}
-			<span name='bf-{{this.f}}' class='label {{this.className}}'>{{this.text}} <a href='#' name='filtre' f='{{this.f}}'><span class='glyphicon glyphicon-remove-sign'></span></a></span>
-		{{/each}}
-	</div>
+	{{#each items}}
+		<span name='bf-{{this.f}}' class='label {{this.className}}'>{{this.text}} <a href='#' name='filtre' f='{{this.f}}'><span class='glyphicon glyphicon-remove-sign'></span></a></span>
+	{{/each}}
 </script>
 
 <!-- Panneau d'accueil pour un utilisateur en attente -->
