@@ -1,4 +1,6 @@
 ﻿<?php
+	// Rang des utilisateurs
+
 	define("TIME_OUT",5000);
 	define("RANG_SUPER_ADMIN", 100);
 	define("RANG_ADMIN", 50);
@@ -7,8 +9,22 @@
 	define("RANG_VISITOR", 10);
 	define("RANG_WAITING_USER", 5);
 
-	// Zone de configuration
+	// paramètres de fonctionnement
+
 	define("PWD_SEED", "");						// Base pour les mots de passes
 	define("CREATE_USER_KEY", "");				// Clé permettant la création d'un utilisateur
 	define("PSEUDO_MIN_LENGTH", 6);				// Longueur minimale d'un pseudo
+	define("LISTE_IPP", 30);					// Nombre d'items par page dans un affichage liste
+	define("TROMBI_IPP", 30);					// Nombre d'items par page dans un affichage trombinoscope
+	define("TROMBI_IPL", 5);					// Nombre d'items par ligne dans un affichage trombinoscope
+	define("IMAGE_RATIO", 0.75);				// Rapport largeur image / hauteur image
+
+	// Paramètres de réglage pour la sortie pdf
+	
+	define("LARGEUR_PAGE",210);					// Largeur du document A4 en portrait
+	define("HAUTEUR_PAGE",297);					// Hauteur du document A4 en portrait
+	define("MARGE_GD",10);						// Marge à gauche et à droite
+	define("MARGE_HB",10);						// Marge en haut et en bas
+	define("MARGE_PHOTO",2);					// Marge à laisser de part et d'autre des photos
+	define("ENTETE",10);						// Taille de l'entête
 ?>

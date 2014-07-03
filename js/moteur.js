@@ -8,16 +8,13 @@ function init(){
 	if (RANK>0){ // Cas connecté
 		data.load();
 		data.applyFilter();
-		if (RANK>=RANG_VISITOR) {
-			if (data.evenements.length>0) {
-				data.lastEventID=data.evenements[data.evenements.length-1].ID;
-				data.setFilter(true,{filtreE:data.lastEventID});
-			} else data.setFilter(true,null);
-			data.applyFilter();
-			affichage.setPageActive(null);
-			affichage.trombinoscope();
+		if (data.evenements.length>0) {
+			data.lastEventID=data.evenements[data.evenements.length-1].ID;
+		}
+		if ((RANK==RANG_VISITOR)||(RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)) {
+			// Affichage du trombinoscope
+			trombinoscopeButtonClick();
 		} else {
-			// C'est donc un utilisateur en attente
 			goHome();
 		}
 	}
@@ -43,6 +40,22 @@ function rankName(rankUser){
 //----------------------------
 // Interface
 //-----------------------------
+
+// Lance l'affichage du PDF
+function getPDF(){
+	var 	requete=[],
+			strRequete='';
+	if (data.filtreE!=null) {
+		requete.push('fE='+data.filtreE);
+		requete.push('nomE='+encodeURIComponent(data.getEvenementById(data.filtreE).NOM));
+	}
+	if (data.filtreR!=null) {
+		requete.push('fR='+data.filtreR);
+		requete.push('nomR='+encodeURIComponent(data.getRegionById(data.filtreR).NOM));
+	}
+	if (requete.length>0) { strRequete='?'+requete.join('&'); }
+	window.open('./php/trombinoscope.php'+strRequete);
+}
 
 // Affiche un écran d'accueil
 function goHome(){
@@ -83,7 +96,6 @@ function accueilAdmin(){
 	$("a[name='btnInfo']").bind("click",information);
 	$("a[name='photosEnAttenteBtn']").bind("click",function() { data.setFilter(true,{filtreS:1}); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); });
 	$("a[name='usersEnAttenteBtn']").bind("click",function() { affichage.listeUsers(); });
-
 }
 
 
@@ -138,6 +150,19 @@ function trombinoscopeButtonClick(){
 	} else {
 		goHome();
 	}
+}
+
+// Retour depuis une photo vers liste ou trombinoscope
+function retour(idP){
+	affichage.setPageActive(idP);
+	affichage.idPersonneActive=idP;
+	if (affichage.retourSurListe) {
+		affichage.liste();
+		$('html,body').animate({ scrollTop: $('#tr'+affichage.idPersonneActive).offset().top }, 1000);
+	} else {
+		affichage.trombinoscope();
+		$('html,body').animate({ scrollTop: $('a[name="photo-'+affichage.idPersonneActive+'"]').offset().top }, 1000);
+	} 
 }
 
 
@@ -387,27 +412,6 @@ function doAddModEvenement(id){
 	}
 }
 
-// Affichage de la liste des évènements
-function afficherListeEvenements(){
-	var container=$("#mainContent");
-
-	affichage.actif="";
-
-	container.empty();
-
-	var source   = $("#liste-event-template").html();
-	var template = Handlebars.compile(source);
-	
-	context = {evenements:data.evenements};
-	container.append(template(context));
-	
-	// Activation des boutons
-	if (RANK>=RANG_ADMIN) {
-		$("a[name|='edit']").bind("click",function(){afficherFormModificationEvenement(this.getAttribute("idE")); return false; });
-	}
-	$("a[name|='trombi']").bind("click",function(){data.setFilter(true,{filtreE:this.getAttribute("idE")}); data.applyFilter(); affichage.setPageActive(null); affichage.trombinoscope(); return false;});
-}
-
 //------------------------------
 // Interface liée aux personnes
 //------------------------------
@@ -508,7 +512,7 @@ function afficherFormulaireModificationPersonne(id){
 		    } else {
 		        initialized = true;
 		        $image.cropper({
-		        	aspectRatio : 3/4,
+		        	aspectRatio : IMAGE_RATIO,
 		            done: function(data) {
 		                //console.log(data);
 		            }
@@ -526,7 +530,7 @@ function afficherFormulaireModificationPersonne(id){
 	$('#nextButton').bind("click", function() { choixModifOuAffichage(data.getNext(this.getAttribute("idP"))); });
 	$('#validButton').bind("click", function() { var idP=this.getAttribute("idP"); if (validationPersonne(idP)){ afficherFormulaireModificationPersonne(idP); } });
 	$('#delButton').bind("click", function() { var idP=this.getAttribute("idP"); var personneToDisplay=data.getPrev(idP,true); if(delPersonne(idP)) { choixModifOuAffichage(personneToDisplay);} });
-	$('#retourButton').bind("click", function() { affichage.setPageActive(this.getAttribute("idP")); if (affichage.retourSurListe) { affichage.liste(); } else {affichage.trombinoscope(); } });
+	$('#retourButton').bind("click", function() { retour(this.getAttribute("idP")); });
 	$('#nouveauButton').bind("click", function() { afficherFormulaireModificationPersonne(-1); });
 	$('#personneModif').submit(function(){ var id=validerFormulaireModificationPersonne(this.getAttribute("idP")); if(id!=-1) { choixModifOuAffichage(id); } return false; });
 	$("a[name|='evenement']").bind("click",toggleParticipationAEvenement);
@@ -1092,10 +1096,6 @@ var affichage = {
 	actif:"", // Indique quel type d'affichage est en cours
 	pageActiveTrombi:0, // Numéro de page courante si nécessaire
 	pageActiveListe:0,
-	photosParLigne:5, // Nombres de photos sur une ligne de trombinoscope
-	photosParPage:25, // Nombres de photos par page de trombinoscope
-	itemsParPage:50, // Nombres de personnes par ligne avec l'affichage tableau / Tous(null)
-	divFiltres:null, // div contenant les filtres
 	retourSurListe:true, // Indique si le retour se fait sur liste ou sur trombi
 	usersPage:0 // Page courante de l'affichage des utilisateurs
 }
@@ -1209,13 +1209,13 @@ affichage.personne=function(id){
 // Donne la liste des éléments à afficher en tenant compte du filtrage
 // Affiche les éléments de la liste
 affichage.liste=function(){
-	var i,Npage,rangInitial,rangFinal;
-	var container=$("#mainContent");
-	var it;
-	var context={};
-	var itToAdd, nouvellePage;
-	var proprietaire;
-
+	var 	i,Npage,rangInitial,rangFinal,
+			container=$("#mainContent"),
+			it,
+			context={},
+			itToAdd, nouvellePage,
+			proprietaire;
+			
 	this.actif="liste";
 
 	this.retourSurListe=true; 
@@ -1223,28 +1223,24 @@ affichage.liste=function(){
 	//--- Création du contexte -------
 	
 	// Pagination
-	if (this.itemsParPage!=null) {
-		Npage=Math.floor(data.listeAAfficher.length/this.itemsParPage);
-		if (Npage>0){
-			context.pages=[];
-			if (this.pageActiveListe<=0) { context.premierePage=true; }
-			for (i=0;i<=Npage;i++) {
-				nouvellePage={index:i};
-				if (i==this.pageActiveListe) { nouvellePage.active=true; }
-				context.pages.push(nouvellePage);
-			}
-			if (this.pageActiveListe>=Npage) { context.dernierePage=true; }
+	Npage=Math.floor(data.listeAAfficher.length/LISTE_IPP);
+	if (Npage>0){
+		context.pages=[];
+		if (this.pageActiveListe<=0) { context.premierePage=true; }
+		for (i=0;i<=Npage;i++) {
+			nouvellePage={index:i};
+			if (i==this.pageActiveListe) { nouvellePage.active=true; }
+			context.pages.push(nouvellePage);
 		}
-		rangInitial=this.pageActiveListe*this.itemsParPage;
-		rangFinal=Math.min(rangInitial+this.itemsParPage,data.listeAAfficher.length);
-	} else {
-		rangInitial=0;
-		rangFinal=data.listeAAfficher.length;
+		if (this.pageActiveListe>=Npage) { context.dernierePage=true; }
 	}
-	
+	rangInitial=this.pageActiveListe*LISTE_IPP;
+	rangFinal=Math.min(rangInitial+LISTE_IPP,data.listeAAfficher.length);
+
 	// Boutons
 	if (RANK>=RANG_ADMIN) {
-		context.validationButton=true;
+		context.menuButtons=[];
+		context.menuButtons.push({nom:'Valider', id:'validationButton'});
 	}
 	
 	context.personnes=[];
@@ -1277,8 +1273,8 @@ affichage.liste=function(){
 	var template = Handlebars.compile(source);
 
 	container.empty();
-	affichage.displayFilter(container);
 	container.append(template(context));
+	affichage.displayFilter($('#barreDeFiltre'));
 	
 	//--- Création des évènements  -------
 	
@@ -1302,10 +1298,8 @@ affichage.setPageActive=function(personne){
 		this.pageActiveTrombi=0;
 		this.pageActiveListe=0;
 	} else {
-		if (this.photosParPage != null) { this.pageActiveTrombi=Math.floor(rang/this.photosParPage); }
-		else { this.pageActiveTrombi=0; }
-		if (this.itemsParPage!= null) { this.pageActiveListe=Math.floor(rang/this.itemsParPage); }
-		else { this.pageActiveListe=0; }
+		this.pageActiveTrombi=Math.floor(rang/TROMBI_IPP);
+		this.pageActiveListe=Math.floor(rang/LISTE_IPP);
 	}
 }
 
@@ -1323,24 +1317,19 @@ affichage.trombinoscope=function(){
 	//--- Création du contexte -------
 	
 	// Pagination
-	if (this.photosParPage!=null) {
-		Npage=Math.floor(data.listeAAfficher.length/this.photosParPage);
-		if (Npage>0){
-			context.pages=[];
-			if (this.pageActiveTrombi<=0) { context.premierePage=true; }
-			for (i=0;i<=Npage;i++) {
-				nouvellePage={index:i};
-				if (i==this.pageActiveTrombi) { nouvellePage.active=true; }
-				context.pages.push(nouvellePage);
-			}
-			if (this.pageActiveTrombi>=Npage) { context.dernierePage=true; }
+	Npage=Math.floor(data.listeAAfficher.length/TROMBI_IPP);
+	if (Npage>0){
+		context.pages=[];
+		if (this.pageActiveTrombi<=0) { context.premierePage=true; }
+		for (i=0;i<=Npage;i++) {
+			nouvellePage={index:i};
+			if (i==this.pageActiveTrombi) { nouvellePage.active=true; }
+			context.pages.push(nouvellePage);
 		}
-		rangInitial=this.pageActiveTrombi*this.photosParPage;
-		rangFinal=Math.min(rangInitial+this.photosParPage,data.listeAAfficher.length);
-	} else {
-		rangInitial=0;
-		rangFinal=data.listeAAfficher.length;
+		if (this.pageActiveTrombi>=Npage) { context.dernierePage=true; }
 	}
+	rangInitial=this.pageActiveTrombi*TROMBI_IPP;
+	rangFinal=Math.min(rangInitial+TROMBI_IPP,data.listeAAfficher.length);
 	
 	context.lignes=[];
 	nouvelleLigne={personnes:[]};
@@ -1354,7 +1343,7 @@ affichage.trombinoscope=function(){
 			else { nouvellePersonne.className=''; }
 		}
 		nouvelleLigne.personnes.push(nouvellePersonne);
-		if (nouvelleLigne.personnes.length==this.photosParLigne) {
+		if (nouvelleLigne.personnes.length==TROMBI_IPL) {
 			context.lignes.push(nouvelleLigne);
 			nouvelleLigne={personnes:[]};
 		}
@@ -1369,8 +1358,8 @@ affichage.trombinoscope=function(){
 	var template = Handlebars.compile(source);
 
 	container.empty();
-	affichage.displayFilter(container);
 	container.append(template(context));
+	affichage.displayFilter($('#barreDeFiltre'));
 
 	//--- Création des évènements  -------
 	
@@ -1397,12 +1386,12 @@ affichage.listeUsers=function(page){
 	if (data.usersList!=null) {
 		// Préparation du contexte
 		N=data.usersList.length;
-		if (this.usersPage*this.itemsParPage>N) { this.usersPage=0; }
+		if (this.usersPage*LISTE_IPP>N) { this.usersPage=0; }
 		context.users=[];
-		for (i=this.usersPage*this.itemsParPage;i<Math.min(N,(this.usersPage+1)*this.itemsParPage);i++) { context.users.push(data.usersList[i]); }
-		if (this.itemsParPage<N) {	// création de la pagination
+		for (i=this.usersPage*LISTE_IPP;i<Math.min(N,(this.usersPage+1)*LISTE_IPP);i++) { context.users.push(data.usersList[i]); }
+		if (LISTE_IPP<N) {	// création de la pagination
 			context.pages=[];
-			for (i=0;i<=Math.floor(N/this.itemsParPage);i++) {
+			for (i=0;i<=Math.floor(N/LISTE_IPP);i++) {
 				nPage={index:i};
 				if (i==this.usersPage) { nPage.active=true; }
 				context.pages.push(nPage);
@@ -1422,6 +1411,27 @@ affichage.listeUsers=function(page){
 		$("a[name='addU']").bind("click",function(){ addModUser(-1); return false;});
 		$("a[name='photos']").bind("click",function(){ data.setFilter(true,{filtreContribsOf:this.getAttribute('idU')}); data.applyFilter(); affichage.setPageActive(null); affichage.liste(); return false;});
 	}
+}
+
+// Affichage de la liste des évènements
+affichage.listeEvenements = function(){
+	var container=$("#mainContent");
+
+	affichage.actif="";
+
+	container.empty();
+
+	var source   = $("#liste-event-template").html();
+	var template = Handlebars.compile(source);
+	
+	context = {evenements:data.evenements};
+	container.append(template(context));
+	
+	// Activation des boutons
+	$("a[name|='edit']").bind("click",function(){afficherFormModificationEvenement(this.getAttribute("idE")); });
+	$("a[name='del']").bind("click",function(){ addAlert("Cette fonction n'est pas encore implémentée.",0); });
+	$("a[name|='trombi']").bind("click",function(){data.setFilter(true,{filtreE:this.getAttribute("idE")}); data.applyFilter(); affichage.setPageActive(null); affichage.trombinoscope(); });
+	$("a[name='addE']").bind("click",function(){ afficherFormModificationEvenement(-1); });
 }
 
 //----------------------

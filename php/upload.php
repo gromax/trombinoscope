@@ -51,7 +51,7 @@
 
 					$imgS = ImageCreateFromJpeg($imgFolder . $id.'.jpg')
 						or die ('<script> window.top.window.loadTrigger(eval({state:"failed", error:"'.$imgFile.'  Erreur lors de la création de l\'image"}));</script>');
-					$imgD=recopImage($imgS, 0.75);
+					$imgD=recopImage($imgS, IMAGE_RATIO);
 					//imagedestroy($imgS);
 					imagejpeg($imgD,$imgFolder . $id.'.jpg');
 					//imagedestroy($imgD);

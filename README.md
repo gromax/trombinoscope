@@ -10,6 +10,7 @@ Installation
   * `bootstrap-file-input.js`
   * `handlebar.js`
   * `jquery-1.9.1.min.js`
+  * `fpdf` dans un sous répertoire fpdf
   * Un sous répertoire Cropper contenant l'image Cropper de fengyuanchen
 	* `cropper.min.css`
 	* `cropper.min.js`

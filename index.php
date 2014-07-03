@@ -22,6 +22,10 @@
 			var PWD_SEED='<?php echo PWD_SEED; ?>';
 			var RANK=<?php echo RANK ?>;
 			var ranks = [RANG_SUPER_ADMIN, RANG_ADMIN, RANG_PRIVILEGED_USER, RANG_USER, RANG_VISITOR, RANG_WAITING_USER];
+			var LISTE_IPP = <?php echo LISTE_IPP ?>;
+			var TROMBI_IPP = <?php echo TROMBI_IPP ?>;
+			var TROMBI_IPL = <?php echo TROMBI_IPL ?>;
+			var IMAGE_RATIO = <?php echo IMAGE_RATIO ?>;
 		</script>
 		<script language='javascript' type='text/javascript' src='./js/moteur.js'></script>
 		<script src="./lib/jquery-1.9.1.min.js"></script>
@@ -55,24 +59,17 @@
 	if (RANK>=RANG_ADMIN) { ?>
 					<ul class="nav navbar-nav">
 						<li class="dropdown">
-					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Photos<b class="caret"></b></a>
+					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Menu<b class="caret"></b></a>
 					  		<ul class="dropdown-menu">
-								<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1);">Nouvelle</a></li>
-								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Liste</a></li>
+								<li><a href="#" onclick="affichage.listeEvenements();">Liste des événements</a></li>
+								<li><a href="#" onclick="affichage.listeUsers(); return false;">Liste des utilisateurs</a></li>
 								<li class="divider"></li>
-								<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Inscriptions</a></li>
+								<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1);">Nouvelle photo</a></li>
+								<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Photos non validées</a></li>
 								<li class="divider"></li>
-								<li><a href="#" onclick="data.setFilter(true,null); data.applyFilter(); affichage.setPageActive(null); affichage.trombinoscope()">Trombinoscope</a></li>
+								<li><a href="#" onclick="getPDF();">PDF</a></li>
 					  		</ul>
 						</li>
-						<li class="dropdown">
-					  		<a href="#" class="dropdown-toggle" data-toggle="dropdown">Évènements<b class="caret"></b></a>
-					  		<ul class="dropdown-menu">
-								<li><a href="#" onclick="afficherFormModificationEvenement(-1);">Nouveau</a></li>
-								<li><a href="#" onclick="afficherListeEvenements();">Liste</a></li>
-					  		</ul>
-						</li>
-						<li><a href="#" onclick="affichage.listeUsers(); return false;">Users</a></li>
 				  	</ul>
 					 <form class="navbar-form navbar-left" role="search" onsubmit="data.filtrerSelonRecherche($('#inpSearch').val()); affichage.setPageActive(null); affichage.liste(); return false;">
 						<div class="form-group">
@@ -80,7 +77,13 @@
 						</div>
 						<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
 					 </form>
-<?php } elseif ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
+<?php } elseif (RANK==RANG_PRIVILEGED_USER) { ?>
+					<ul class="nav navbar-nav">
+						<li><a href="#" onclick="getPDF();">PDF</a></li>
+						<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
+						<li><a href="#" onclick="data.setFilter(true,{filtreContribsOf:data.user.ID}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Mes photos</a></li>
+					</ul>
+<?php } elseif ((RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { ?>
 					<ul class="nav navbar-nav">
 						<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
 						<li><a href="#" onclick="data.setFilter(true,{filtreContribsOf:data.user.ID}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Mes photos</a></li>

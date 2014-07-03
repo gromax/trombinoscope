@@ -80,24 +80,26 @@
 <!-- Liste des évènements -->
 <script id="liste-event-template" type="text/x-handlebars-template">
 	<h1 class='text-info'>Liste des évènements</h1>
-	{{#if evenements}}
-		<table class='table table-bordered table-striped'><tr><th width=16></th><th>Nom</th></tr>
-		{{#each evenements}}
-			<tr>
-			<td><a href='#' idE={{this.ID}} name='edit-{{this.ID}}'><span class='glyphicon glyphicon-pencil'></span></a></td>
-			<td><a href='#' idE={{this.ID}} name='trombi-{{this.ID}}'>{{this.NOM}}</a></td>
-			</tr>
-		{{/each}}
-		</table>
-		{{else}}
-		<i>Aucun élèment dans la base</i>
-	{{/if}}
+	<table class='table table-bordered table-striped'>
+	<thead>
+	<tr><th width=16><a href='#' name='addE'><span class='glyphicon glyphicon-plus'></span></a></th><th width=16></th><th>Nom</th></tr>
+	</thead>
+	<tbody>
+	{{#each evenements}}
+		<tr>
+		<td><a href='#' idE={{this.ID}} name='edit-{{this.ID}}'><span class='glyphicon glyphicon-pencil'></span></a></td>
+		<td><a href='#' idE={{this.ID}} name='del'><span class='glyphicon glyphicon-trash'></span></a></td>
+		<td><a href='#' idE={{this.ID}} name='trombi-{{this.ID}}'>{{this.NOM}}</a></td>
+		</tr>
+	{{/each}}
+	</tbody>
+	</table>
 </script>
 
 <!-- Liste des personnes pour admin -->
 <script id="listeAdmin-personne-template" type="text/x-handlebars-template">
 	<div class='row'>
-		<div class='col-md-6 col-xs-6'>
+		<div class='col-md-5 col-xs-6'>
 			{{#if pages}}
 			<ul style='margin-top:0;' class='pagination'>
 				{{#if premierePage}}
@@ -116,17 +118,24 @@
 				<li class='disabled'><a href='#'>&raquo;</a></li>
 				{{else}}
 				<li><a href='#' id='pageSuivante'>&raquo;</a></li>
-				{{/if}}				
+				{{/if}}
 			</ul>
 			{{/if}}
 		</div>
-		<div class='col-md-6 col-xs-6'>
+		<div class='col-md-1 col-xs-1'>
+			{{#if menuButtons}}
 			<div class='btn-group'>
-			{{#if validationButton}}
-				<button id='validationButton' type='button' class='btn btn-primary'>Valider</button>
-			{{/if}}
+				<button type='button' style='margin-top:0;' class='btn btn-default dropdown-toggle' data-toggle='dropdown'>Menu</button>
+				<ul class="dropdown-menu" role="menu">
+					{{#each menuButtons}}
+					<li><a href='#' id='{{this.id}}'>{{this.nom}}</a></li>
+					{{/each}}
+				</ul>
 			</div>
+			{{/if}}
 		</div>
+
+		<div id='barreDeFiltre' class='col-md-6 col-xs-5'></div>
 	</div>
 
 	
@@ -160,7 +169,7 @@
 <!-- Liste des personnes pour user -->
 <script id="listeUser-personne-template" type="text/x-handlebars-template">
 	<div class='row'>
-		<div class='col-md-6 col-xs-6'>
+		<div class='col-md-6 col-xs-7'>
 			{{#if pages}}
 			<ul style='margin-top:0;' class='pagination'>
 				{{#if premierePage}}
@@ -183,8 +192,7 @@
 			</ul>
 			{{/if}}
 		</div>
-		<div class='col-md-6 col-xs-6'>
-		</div>
+		<div id='barreDeFiltre' class='col-md-6 col-xs-5'></div>
 	</div>
 
 	
@@ -222,7 +230,7 @@
 <!-- trombinoscope -->
 <script id="trombinoscope-personne-template" type="text/x-handlebars-template">
 	<div class='row'>
-		<div class='col-md-6 col-xs-6'>
+		<div class='col-md-6 col-xs-7'>
 			{{#if pages}}
 			<ul style='margin-top:0;' class='pagination'>
 				{{#if premierePage}}
@@ -245,11 +253,7 @@
 			</ul>
 			{{/if}}
 		</div>
-		<div class='col-md-6 col-xs-6'>
-			<div class='btn-group'>
-
-			</div>
-		</div>
+		<div id='barreDeFiltre' class='col-md-6 col-xs-5'></div>
 	</div>
 
 	
@@ -273,19 +277,45 @@
 		{{/each}}
 	</table>
 	</div>
+
+	<div class='row'>
+		<div class='col-md-6 col-xs-7'>
+			{{#if pages}}
+			<ul class='pagination'>
+				{{#if premierePage}}
+				<li class='disabled'><a href='#'>&laquo;</a></li>
+				{{else}}
+				<li><a id='pagePrecedente' href='#'>&laquo;</a></li>
+				{{/if}}
+				{{#each pages}}
+					{{#if this.active}}
+						<li class='active'><a href='#'>{{this.index}}<span class='sr-only'>(current)</span></a></li>
+					{{else}}
+						<li><a href='#' name='page-{{this.index}}' index={{this.index}}>{{this.index}}</a></li>
+					{{/if}}
+				{{/each}}
+				{{#if dernierePage}}
+				<li class='disabled'><a href='#'>&raquo;</a></li>
+				{{else}}
+				<li><a href='#' id='pageSuivante'>&raquo;</a></li>
+				{{/if}}				
+			</ul>
+			{{/if}}
+		</div>
+	</div>
 </script>
 
 <!-- Affichage d'une personne -->
 <script id="affichage-personne-template" type="text/x-handlebars-template">
 	<div class='row'>
-		<div class='col-md-4 col-xs-4'>
+		<div class='col-md-5 col-xs-8'>
 			<div class='btn-group'>
 				<button id='precButton' idP={{ID}} type='button' class='btn btn-default btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
 				<button id='retourButton' type='button' idP={{ID}} class='btn btn-default btn-sm'>Retour</button>
 				<button id='nextButton' idP={{ID}} type='button' class='btn btn-default btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
 			</div>
 		</div>
-		<div id='barreDeFiltre' class='col-md-6 col-xs-6'></div>
+		<div id='barreDeFiltre' class='col-md-7 col-xs-4'></div>
 	</div>
 
 	<div class='col-md-3 col-xs-3'>
@@ -365,7 +395,7 @@
 		</div>
 	{{/if}}
 	<div class="row">
-		<div class='col-md-4 col-xs-4'>
+		<div class='col-md-5 col-xs-8'>
 			<div class='btn-group'>
 				<button id='precButton' idP={{ID}} type='button' class='btn btn-default btn-sm'><span class='glyphicon glyphicon-chevron-left'></span> Précédente</button>
 				<div class='btn-group'>
@@ -382,7 +412,7 @@
 				<button id='nextButton' idP={{ID}} type='button' class='btn btn-default btn-sm'>Suivante <span class='glyphicon glyphicon-chevron-right'></span></button>
 			</div>
 		</div>
-		<div id='barreDeFiltre' class='col-md-6 col-xs-6'>
+		<div id='barreDeFiltre' class='col-md-7 col-xs-4'>
 			{{#if SUG}}
 				<label class="label label-danger">Photo non validée</span>			
 			{{/if}}
@@ -494,7 +524,7 @@
 	<table class='table table-bordered table-striped'>
 	<thead><tr>
 		<th width=16></th>
-		<th width=16><a href='#' name='addU'><span class='glyphicon glyphicon-plus'></span></a>
+		<th width=16><a href='#' name='addU'><span class='glyphicon glyphicon-plus'></span></a></th>
 		<th width=16></th></th><th>PSEUDO</th><th>Nom/Prénom</th><th>EMAIL</th><th>RANG</th><th>Connexion</th>
 	</tr></thead>
 	<tbody>
