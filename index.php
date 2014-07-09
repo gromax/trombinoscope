@@ -68,6 +68,7 @@
 								<li><a href="#" onclick="data.setFilter(true,{filtreS:1}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Photos non validées</a></li>
 								<li class="divider"></li>
 								<li><a href="#" onclick="getPDF();">PDF</a></li>
+								<li><a href="#" onclick="getZIP();">Zip</a></li>
 					  		</ul>
 						</li>
 				  	</ul>
@@ -80,6 +81,7 @@
 <?php } elseif (RANK==RANG_PRIVILEGED_USER) { ?>
 					<ul class="nav navbar-nav">
 						<li><a href="#" onclick="getPDF();">PDF</a></li>
+						<li><a href="#" onclick="getZIP();">Zip</a></li>
 						<li><a href="#" onclick="afficherFormulaireModificationPersonne(-1); return false;">Nouvelle photo</a></li>
 						<li><a href="#" onclick="data.setFilter(true,{filtreContribsOf:data.user.ID}); data.applyFilter(); affichage.setPageActive(null); affichage.liste();">Mes photos</a></li>
 					</ul>

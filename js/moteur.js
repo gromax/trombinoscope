@@ -57,6 +57,11 @@ function getPDF(){
 	window.open('./php/trombinoscope.php'+strRequete);
 }
 
+// Lance l'archive zip
+function getZIP(){
+	window.open('./php/zip.php');
+}
+
 // Affiche un écran d'accueil
 function goHome(){
 	if (RANK>=RANG_ADMIN) { accueilAdmin(); }
@@ -1364,8 +1369,8 @@ affichage.trombinoscope=function(){
 	//--- Création des évènements  -------
 	
 	$("a[name|='photo']").bind("click",function(){ choixModifOuAffichage(this.getAttribute('idP')); return false;});
-	$("#pagePrecedente").bind("click",function(){affichage.pageActiveTrombi--; affichage.trombinoscope(); return false;});
-	$("#pageSuivante").bind("click",function(){affichage.pageActiveTrombi++; affichage.trombinoscope(); return false;});
+	$("a[name='pagePrecedente']").bind("click",function(){affichage.pageActiveTrombi--; affichage.trombinoscope(); return false;});
+	$("a[name='pageSuivante']").bind("click",function(){affichage.pageActiveTrombi++; affichage.trombinoscope(); return false;});
 	$("a[name|='page']").bind("click",function(){ affichage.pageActiveTrombi=this.getAttribute('index'); affichage.trombinoscope(); return false;});
 }
 

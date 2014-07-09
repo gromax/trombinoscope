@@ -236,7 +236,7 @@
 				{{#if premierePage}}
 				<li class='disabled'><a href='#'>&laquo;</a></li>
 				{{else}}
-				<li><a id='pagePrecedente' href='#'>&laquo;</a></li>
+				<li><a name='pagePrecedente' href='#'>&laquo;</a></li>
 				{{/if}}
 				{{#each pages}}
 					{{#if this.active}}
@@ -248,7 +248,7 @@
 				{{#if dernierePage}}
 				<li class='disabled'><a href='#'>&raquo;</a></li>
 				{{else}}
-				<li><a href='#' id='pageSuivante'>&raquo;</a></li>
+				<li><a href='#' name='pageSuivante'>&raquo;</a></li>
 				{{/if}}				
 			</ul>
 			{{/if}}
@@ -285,7 +285,7 @@
 				{{#if premierePage}}
 				<li class='disabled'><a href='#'>&laquo;</a></li>
 				{{else}}
-				<li><a id='pagePrecedente' href='#'>&laquo;</a></li>
+				<li><a name='pagePrecedente' href='#'>&laquo;</a></li>
 				{{/if}}
 				{{#each pages}}
 					{{#if this.active}}
@@ -297,7 +297,7 @@
 				{{#if dernierePage}}
 				<li class='disabled'><a href='#'>&raquo;</a></li>
 				{{else}}
-				<li><a href='#' id='pageSuivante'>&raquo;</a></li>
+				<li><a href='#' name='pageSuivante'>&raquo;</a></li>
 				{{/if}}				
 			</ul>
 			{{/if}}
