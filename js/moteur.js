@@ -405,7 +405,7 @@ function doAddModEvenement(id){
 
 	if (reponse.state=="success") {
 		if (id==-1) {
-			data.addEvent({ID:reponse.insertedID, NOM:nom, liens:[]});
+			data.addEvent({ID:reponse.insertedID, NOM:nom});
 			addAlert("<i>"+nom+"</i> a bien été ajouté(e).",1);
 		} else {
 			data.modEvent(id,{NOM:nom});
@@ -443,6 +443,7 @@ function afficherFormulaireModificationPersonne(id){
 	var context={ID:-1};
 	var personne, nouvelleRegion, nouvelEvenement;
 	var i;
+	var auteur, nom;
 	
 	affichage.actif="modification personne";
 
@@ -470,6 +471,28 @@ function afficherFormulaireModificationPersonne(id){
 		if (personne.VL==1) { context.VL=true; }
 		if (personne.EP==1) { context.EP=true; }
 		if (personne.PHOTO!='') { context.PHOTO=personne.PHOTO; }
+
+		if (RANK>=RANG_ADMIN){
+			context.idAuteur=personne.IDA;
+			if (personne.IDA==0) {context.nomAuteur="Inconnu";}
+			else {
+				auteur=data.getUserById(personne.IDA);
+				if (auteur==null) {
+					context.nomAuteur="Inconnu";
+					context.idAuteur=0;
+				} else {
+					if (auteur.NOMPRENOM!="") { context.nomAuteur=auteur.NOMPRENOM; }
+					else { context.nomAuteur=auteur.PSEUDO; }
+				}
+			}
+			context.auteurs=[{IDA:0, nom:"Inconnu"}];
+			for (i=0;i<data.usersList.length;i++){
+				if (data.usersList[i].NOMPRENOM!="") { nom=data.usersList[i].NOMPRENOM; }
+				else {nom=data.usersList[i].PSEUDO; }
+				if (data.usersList[i].ID==personne.IDA) { context.auteurs.push({IDA:data.usersList[i].ID, nom:nom, actif:true}); }
+				else { context.auteurs.push({IDA:data.usersList[i].ID, nom:nom}); }
+			}
+		}
 	}
 	context.regions=[];
 	for (i=0;i<data.regions.length;i++) {
@@ -482,11 +505,12 @@ function afficherFormulaireModificationPersonne(id){
 		context.evenements=[];
 		for (i=0;i<data.evenements.length;i++) {
 			nouvelEvenement={IDE:data.evenements[i].ID, NOM:data.evenements[i].NOM};
-			if (personne.liens.indexOf(data.evenements[i])>=0) { nouvelEvenement.actif=true; }
+			if (data.indexOfEventInPersonne(personne,data.evenements[i]) >=0) { nouvelEvenement.actif=true; }
 			context.evenements.push(nouvelEvenement);
 		}
 	}
-	
+
+
 	//--- Applcation du contexte au template handlebars -------
 	
 	var source;
@@ -500,7 +524,6 @@ function afficherFormulaireModificationPersonne(id){
 	container.empty();
 	container.append(template(context));
 	affichage.displayFilter($('#barreDeFiltre'));
-
 
 	// Gestion du modal et du crop
 	if ((personne!=null)&&(personne.PHOTO!='')) {
@@ -518,9 +541,7 @@ function afficherFormulaireModificationPersonne(id){
 		        initialized = true;
 		        $image.cropper({
 		        	aspectRatio : IMAGE_RATIO,
-		            done: function(data) {
-		                //console.log(data);
-		            }
+		            done: function(data) {  }
 		        });
 		    }
 		}).on("hidden.bs.modal", function() {
@@ -529,7 +550,6 @@ function afficherFormulaireModificationPersonne(id){
 		});
 	}
 
-	
 	//--- Création des évènements  -------
 	$('#precButton').bind("click", function() { choixModifOuAffichage(data.getPrev(this.getAttribute("idP"),false)); });
 	$('#nextButton').bind("click", function() { choixModifOuAffichage(data.getNext(this.getAttribute("idP"))); });
@@ -542,6 +562,8 @@ function afficherFormulaireModificationPersonne(id){
 	$('input[type=file]').bootstrapFileInput();
 	$("#validCropBtn").bind("click", function(){ $('#ajaxFlagModal').removeClass('invisible'); cropImage($image.cropper("getData"),this.getAttribute("idP")); })
 	$("#btnFile").change(function(){ $('#ajaxFlag').removeClass('invisible');})
+	$('#auteurModif').submit(function(){ var idP=this.getAttribute("idP"); if ( modificationAuteur(idP) ) { choixModifOuAffichage(idP); } return false; });
+
 }
 
 // Formulaire de recadrage d'image
@@ -562,6 +584,25 @@ function cropImage(sizeData,id){
 	}
 }
 
+// Attribue un nouvel auteur à une personne
+function modificationAuteur(id){
+	var personne;
+	var reponse;
+	var idNA=$('#idNA').val();
+	reponse=manager.modAuteur(id,idNA);
+	if (reponse.state=="success") {
+		personne=data.getPersonneById(id);
+		if (personne!=null) {
+			personne.IDA=idNA;
+		}
+		addAlert("Modification réussie !",1);
+		return true;
+	} else {
+		addAlert("Échec de la modification",1);
+	}
+	return false;
+
+}
 
 // Validation du formulaire de modification d'une personne
 function validerFormulaireModificationPersonne(id){
@@ -586,7 +627,7 @@ function validerFormulaireModificationPersonne(id){
 	if (reponse.state=="success") {
 		if (id==-1) {
 			parametres.ID=reponse.insertedID;
-			if ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { parametres.IDA=data.user.ID; } else { parametres.IDA=0; }
+			parametres.IDA=data.user.ID;
 			data.addPersonne(parametres);
 			addAlert("<i>"+parametres.PRENOM+" "+parametres.NOM+"</i> a bien été ajouté(e).",1);
 		} else {
@@ -670,7 +711,10 @@ function loadTrigger(callBack){
 			personne.PHOTO=photo;
 			afficherFormulaireModificationPersonne(personne);
 		}
-	} else addAlert("<strong>Echec !</strong> "+callBack.error,0);
+	} else {
+		addAlert("<strong>Echec !</strong> "+callBack.error,0);
+		$('#ajaxFlag').addClass('invisible');
+	}
 }
 
 // Validation de personnes, avec le bouton dans la liste
@@ -765,7 +809,7 @@ data.load=function(){
 	var i;
 	var getData;
 	var liens;
-	var personne,ev;
+	var personne;
 	
 	getData=manager.get("./php/getData.php",null);
 	this.user=getData.user;
@@ -785,18 +829,37 @@ data.load=function(){
 	}
 	this.personnes.sort(comparePersonnesAlpha);
 
-	for (i=0;i<this.evenements.length;i++) this.evenements[i].liens=[];
-	
 	for (i=0;i<liens.length;i++) {
 		personne=this.getPersonneById(liens[i].IDP);
-		ev=this.getEvenementById(liens[i].IDE);
-		if ((personne!=null)&&(ev!=null)) {
-			personne.liens.push(ev);
-			ev.liens.push(personne);
+		if (personne!=null) {
+			personne.liens.push(liens[i]);
 		}
 	}
 	
-	for(i=0;i<this.evenements.length;i++) this.evenements[i].liens.sort(comparePersonnesAlpha);	
+}
+
+// Renvoie l'index de l'événement dans le tableau liens de personne
+data.indexOfEventInPersonne=function(personne,evenement){
+	var idE;
+	var i;
+	personne = typeof personne == "object" ? personne : this.getPersonneById(personne);
+	if (personne!=null) {
+		if (typeof evenement == "object") {
+			if (evenement==null) {
+				return -1;
+			} else {
+				idE=evenement.ID;
+			}
+		} else {
+			idE=evenement;
+		}
+		for (i=0;i<personne.liens.length;i++) {
+			if (personne.liens[i].IDE==idE) {
+				return i;
+			}
+		}
+	}
+	return -1;
 }
 
 data.getUsersList=function(){
@@ -875,35 +938,30 @@ data.addLien=function(personne,evenement){
 	personne = typeof personne == 'object' ? personne : this.getPersonneById(personne);
 	evenement = typeof evenement == 'object' ? evenement : this.getEvenementById(evenement);
 	if ((personne!=null)&&(evenement!=null)) {
-		personne.liens.push(evenement);
-		evenement.liens.push(personne);
-		evenement.liens.sort(comparePersonnesAlpha);
+		personne.liens.push({IDE:evenement.ID});
 	}
 }
 
 // Supprime un lien entre une personne et un évènement
 data.removeLien=function(personne,evenement){
-	var index;
+	var i;
 	
 	personne = typeof personne == 'object' ? personne : this.getPersonneById(personne);
 	evenement = typeof evenement == 'object' ? evenement : this.getEvenementById(evenement);
 	if ((personne!=null)&&(evenement!=null)) {
-		index=personne.liens.indexOf(evenement)
-		while (index>=0) {
-			personne.liens.splice(index,1);
-			index=personne.liens.indexOf(evenement)
-		}
-		index=evenement.liens.indexOf(personne);
-		while (index>=0) {
-			evenement.liens.splice(index,1);
-			index=evenement.liens.indexOf(personne);
+		i=0;
+		while(i<personne.liens.length) {
+			if (personne.liens[i].IDE==evenement.ID) {
+				personne.liens.splice(i,1);
+			} else {
+				i++;
+			}
 		}
 	}
 }
 
 // Ajoute un évènement
 data.addEvent=function(submitedEvent){
-	if (typeof submitedEvent.liens=='undefined') submitedEvent.liens=[];
 	this.evenements.push(submitedEvent);
 }
 
@@ -968,21 +1026,13 @@ data.delPersonne=function(personne){
 	}
 }
 
-// Supprime les liens d'une personne (et donc les liens contraires depuis les évènements)
+// Supprime les liens d'une personne
 data.supprimerLiensDePersonne=function(personne){
 	var i;
 	var ev;
 	personne = typeof personne == 'object' ? personne : this.getPersonneById(personne);
 	if (personne!=null) {
-		while (0<personne.liens.length){
-			ev=personne.liens[0];
-			i=0;
-			while(i<ev.liens.length){
-				if(ev.liens[i]==personne) { ev.liens.splice(i,1); }
-				else { i++; }
-			}
-		personne.liens.splice(0,1);
-		}
+		personne.liens.length=0;
 	}
 }
 
@@ -1048,7 +1098,7 @@ data.personneTroughFilter=function(personne){
 			((this.filtreP!=null) && (this.filtreP!=hasPhoto)) ||
 			((this.filtreV!=null) && (this.filtreV!=personne.VL)) ||
 			((this.filtreR!=null) && (this.filtreR!=personne.IDREGION)) ||
-			((this.filtreE!=null) && (personne.liens.indexOf(this.filtreEvent)==-1)) ||
+			((this.filtreE!=null) && (data.indexOfEventInPersonne(personne,this.filtreE)==-1)) ||
 			((this.activeSearch) && (personne.MAJ.search(this.strSearch)==-1) && (personne.MAJ2.search(this.strSearch)==-1))
 		) {
 		return false;
@@ -1076,7 +1126,6 @@ data.getPrev=function(personne,forceElse){
 	var retour;
 	personne = typeof personne == 'object' ? personne : this.getPersonneById(personne);
 	index=this.listeAAfficher.indexOf(personne);
-	console.log(index);
 	if (index==-1) { return null; }
 	else {
 		index--;
@@ -1182,7 +1231,7 @@ affichage.personne=function(id){
 		context.evenements=[];
 		for (i=0;i<data.evenements.length;i++) {
 			nouvelEvenement={IDE:data.evenements[i].ID, NOM:data.evenements[i].NOM};
-			if (personne.liens.indexOf(data.evenements[i])>=0) { nouvelEvenement.actif=true; }
+			if (data.indexOfEventInPersonne(personne,data.evenements[i])>=0) { nouvelEvenement.actif=true; }
 			context.evenements.push(nouvelEvenement);
 		}
 
@@ -1322,7 +1371,7 @@ affichage.trombinoscope=function(){
 	//--- Création du contexte -------
 	
 	// Pagination
-	Npage=Math.floor(data.listeAAfficher.length/TROMBI_IPP);
+	Npage=Math.floor((data.listeAAfficher.length-1)/TROMBI_IPP);
 	if (Npage>0){
 		context.pages=[];
 		if (this.pageActiveTrombi<=0) { context.premierePage=true; }
@@ -1600,6 +1649,12 @@ manager.cropImage=function(sizeData,id){
 	sizeData.id=id;
 	return this.post('./php/cropImage.php',sizeData);
 }
+
+// Requête de modification d'un auteur
+manager.modAuteur=function(idP,idNA){
+	return this.post('./php/modAuteur.php',{idP:idP,idNA:idNA});
+}
+
 
 //------------------------
 // Typographique et divers

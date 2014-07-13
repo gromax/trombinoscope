@@ -13,6 +13,7 @@ $createParticipationsTable = $connexion->prepare("CREATE TABLE IF NOT EXISTS `".
 	`ID` int(11) NOT NULL AUTO_INCREMENT,
 	`IDP` int(11) NOT NULL,
 	`IDE` int(11) NOT NULL,
+	`T` text NOT NULL,
 	PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;");
 $createPersonnesTable = $connexion->prepare("CREATE TABLE IF NOT EXISTS `".$prefixeDB."personnes` (

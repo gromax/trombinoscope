@@ -22,9 +22,7 @@
 
 			if (RANK>=RANG_ADMIN) { $S=0; }
 			else { $S=1; }
-			if ((RANK==RANG_PRIVILEGED_USER)||(RANK==RANG_USER)||(RANK==RANG_WAITING_USER)) { $idA=$_SESSION['IDtrombi']; }
-			else { $idA=0; }
-
+			$idA=$_SESSION['IDtrombi'];
 
 			// Préparation de la reqête
 			$addPersonnePrepa = $connexion->prepare('INSERT INTO '.$prefixeDB.'personnes (NOM, PRENOM, VILLE, HOBBY, IDREGION, VL, EP, SUG, DATE, HEURE, DIVERS, IDA) VALUES (:nom, :prenom, :ville, :hobby, :idR, :vl , :ep , :sug , :date, :heure, :div, :ida)'); 

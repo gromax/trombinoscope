@@ -436,8 +436,6 @@
 	</div>
 	
 	<div class='col-md-6 col-xs-6'>
-		
-	
 		<form class='form-horizontal' role='form' id='personneModif' idP={{ID}}>
 			<div class='form-group'><label class='col-sm-4 control-label' for='inputNom'>Nom</label><div class='col-sm-8'><input type='text' class='form-control' id='inputNom' placeholder='Entrez un nom' value='{{NOM}}'></div></div>
 			<div class='form-group'><label class='col-sm-4 control-label' for='inputPrenom'>Prénom</label><div class='col-sm-8'><input type='text' class='form-control' id='inputPrenom' placeholder='Entrez le prénom' value='{{PRENOM}}'></div></div>
@@ -465,6 +463,29 @@
 			{{/if}}	
 			<div class='form-group'><div class='col-sm-offset-4 col-sm-8'><button type='submit' class='btn btn-primary btn-sm'>Valider</button></div></div>
 		</form>
+		{{#if idAuteur}}
+		<div>
+			<h4>Auteur : <i>{{nomAuteur}}</i></h4>
+			<form class='form-horizontal' role='form' id='auteurModif' idP={{ID}} >
+				<div class='form-group'>
+					<div class='col-sm-8'>
+						<select class="form-control" id='idNA'>
+						{{#each auteurs}}
+							{{#if this.actif}}
+									<option value='{{this.IDA}}' selected>{{this.nom}}</option>
+								{{else}}
+									<option value='{{this.IDA}}'>{{this.nom}}</option>
+								{{/if}}
+			  			{{/each}}
+						</select>
+					</div>
+					<div class='col-sm-4'>
+						<button id='changerAuteur' type='submit' class='btn btn-primary btn-sm'>Changer d&apos;auteur</button>
+					</div>
+				</div>
+			</form>
+		</diV>
+		{{/if}}
 	</div>
 
 	<div class='col-md-3 col-xs-3'>
@@ -563,7 +584,7 @@
 <script id="accueil-waiting-user" type="text/x-handlebars-template">
 	<div class="jumbotron">
 		<h1>Bienvenue !</h1>
-		<p>Vous êtes un <b>utillisateur en attente de validation</b>.</p>
+		<p>Vous êtes un <b>utilisateur en attente de validation</b>.</p>
 		<p>Vous pouvez maintenant ajouter des personnes avec leurs photos. Une seule personne peut inscrire toute sa famille, tous ses invités.</p>
 		<p>
 			<a name='addPerson' class="btn btn-primary btn-lg" role="button">Ajouter une photo</a>
